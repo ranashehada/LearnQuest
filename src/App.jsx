@@ -1,9 +1,13 @@
 
+import { useEffect, useState } from "react";
+
 import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate
+  Navigate,
+  Outlet,
+  useLocation,
 } from "react-router-dom";
 
 import Welcome from "./pages/Welcome";
@@ -22,32 +26,143 @@ import StudyPlanner from "./pages/StudyPlanner";
 
 import "./App.css";
 
+const API_URL = "http://localhost:5000";
+
+// Check whether the user has an active session.
+function ProtectedRoutes() {
+  const [status, setStatus] = useState("loading");
+  const location = useLocation();
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkAuthentication() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            method: "GET",
+            credentials: "include",
+          }
+        );
+
+        if (!active) return;
+
+        setStatus(response.ok ? "authenticated" : "guest");
+      } catch (error) {
+        if (active) {
+          console.error("Authentication error:", error);
+          setStatus("guest");
+        }
+      }
+    }
+
+    checkAuthentication();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (status === "loading") {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          fontSize: "18px",
+          fontWeight: 600,
+        }}
+      >
+        Loading LearnQuest...
+      </div>
+    );
+  }
+
+  if (status === "guest") {
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: location }}
+        replace
+      />
+    );
+  }
+
+  return <Outlet />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public pages */}
         <Route path="/" element={<Welcome />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
 
-        <Route element={<MainLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/subjects" element={<MySubjects />} />
-          <Route path="/subjects/:id" element={<SubjectDetails />} />
-          <Route path="/subjects/:id/add-lesson" element={<AddLesson />} />
-          <Route path="my-progress" element={<MyProgress />} />
-          <Route path="progress" element={<MyProgress />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/study-planner" element={<StudyPlanner />} />
+        {/* Pages that require login */}
+        <Route element={<ProtectedRoutes />}>
+          <Route element={<MainLayout />}>
+            <Route
+              path="/dashboard"
+              element={<Dashboard />}
+            />
 
-          <Route
-            path="/subjects/:id/lessons/:lessonId"
-            element={<LessonDetails />}
-          />
+            <Route
+              path="/subjects"
+              element={<MySubjects />}
+            />
+
+            <Route
+              path="/subjects/:id"
+              element={<SubjectDetails />}
+            />
+
+            <Route
+              path="/subjects/:id/add-lesson"
+              element={<AddLesson />}
+            />
+
+            <Route
+              path="/subjects/:id/lessons/:lessonId"
+              element={<LessonDetails />}
+            />
+
+            <Route
+              path="/my-progress"
+              element={<MyProgress />}
+            />
+
+            <Route
+              path="/progress"
+              element={<MyProgress />}
+            />
+
+            <Route
+              path="/profile"
+              element={<Profile />}
+            />
+
+            <Route
+              path="/settings"
+              element={<Settings />}
+            />
+
+            <Route
+              path="/study-planner"
+              element={<StudyPlanner />}
+            />
+          </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Unknown pages */}
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
       </Routes>
     </BrowserRouter>
   );

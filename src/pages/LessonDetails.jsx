@@ -13,18 +13,50 @@ import {
   LoaderCircle,
   AlertCircle,
 } from "lucide-react";
+
 import AIQuiz from "../components/AIQuiz";
+import AIResponse from "../components/AIResponse";
 
 import {
+  initializeLessonStorageUser,
   getLessons,
   getLessonFile,
 } from "../utils/lessonStorage";
 
 const API_URL = "http://localhost:5000";
 
-import AIResponse from "../components/AIResponse";
+function readSubjects(userId) {
+  try {
+    const key = `learnquest-user-${userId}-subjects`;
+    const data = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function AIResult({ content }) {
+  return (
+    <div
+      style={{
+        marginTop: "20px",
+        padding: "24px",
+        border: "1px solid #e5e7eb",
+        borderRadius: "16px",
+        background: "#ffffff",
+      }}
+    >
+      <AIResponse content={content} />
+    </div>
+  );
+}
+
 export default function LessonDetails() {
   const { id, lessonId } = useParams();
+
+  const [lesson, setLesson] = useState(null);
+  const [loadingLesson, setLoadingLesson] = useState(true);
+  const [lessonError, setLessonError] = useState("");
 
   const [activeTab, setActiveTab] = useState("explanation");
 
@@ -33,46 +65,75 @@ export default function LessonDetails() {
 
   const [extractionStatus, setExtractionStatus] =
     useState("loading");
-  const [extractionError, setExtractionError] =
-    useState("");
-  const [extractedText, setExtractedText] =
-    useState("");
-  const [characterCount, setCharacterCount] =
-    useState(0);
+  const [extractionError, setExtractionError] = useState("");
+  const [extractedText, setExtractedText] = useState("");
+  const [characterCount, setCharacterCount] = useState(0);
 
   const [explanation, setExplanation] = useState("");
   const [summary, setSummary] = useState("");
   const [aiLoading, setAiLoading] = useState("");
   const [aiError, setAiError] = useState("");
+
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState("");
 
-  const lesson = getLessons().find(
-    (item) =>
-      item.id === lessonId &&
-      item.subjectId === id
-  );
-
   useEffect(() => {
-    let objectUrl = "";
     let cancelled = false;
+    let objectUrl = "";
     const controller = new AbortController();
 
     async function loadLesson() {
+      setLoadingLesson(true);
+      setLesson(null);
+      setLessonError("");
       setFileUrl("");
       setFileError("");
+      setExtractionStatus("loading");
+      setExtractionError("");
       setExtractedText("");
       setCharacterCount(0);
-      setExtractionError("");
-      setExtractionStatus("loading");
       setExplanation("");
       setSummary("");
-      setAiError("");
       setAiLoading("");
+      setAiError("");
+      setChatMessages([]);
+      setChatQuestion("");
+      setChatError("");
+      setActiveTab("explanation");
 
       try {
+        const user = await initializeLessonStorageUser();
+
+        if (cancelled) return;
+
+        const ownsSubject = readSubjects(user.id).some(
+          (subject) => String(subject.id) === String(id)
+        );
+
+        if (!ownsSubject) {
+          throw new Error(
+            "This subject does not belong to your account."
+          );
+        }
+
+        const foundLesson = getLessons().find(
+          (item) =>
+            String(item.id) === String(lessonId) &&
+            String(item.subjectId ?? item.subject_id) ===
+              String(id)
+        );
+
+        if (!foundLesson) {
+          throw new Error(
+            "This lesson was not found in your account."
+          );
+        }
+
+        setLesson(foundLesson);
+        setLoadingLesson(false);
+
         const file = await getLessonFile(lessonId);
 
         if (cancelled) return;
@@ -93,7 +154,7 @@ export default function LessonDetails() {
         formData.append(
           "file",
           file,
-          lesson.fileName
+          foundLesson.fileName || file.name
         );
 
         const response = await fetch(
@@ -102,6 +163,7 @@ export default function LessonDetails() {
             method: "POST",
             body: formData,
             signal: controller.signal,
+            credentials: "include",
           }
         );
 
@@ -111,37 +173,49 @@ export default function LessonDetails() {
 
         if (!response.ok) {
           throw new Error(
-            result.error ||
-              "Failed to extract lesson text."
+            result.error || "Failed to extract lesson text."
           );
         }
 
         setExtractedText(result.text || "");
         setCharacterCount(
-          result.characters || 0
+          result.characters ??
+            (result.text || "").length
         );
         setExtractionStatus("success");
       } catch (error) {
-        if (
-          cancelled ||
-          error.name === "AbortError"
-        ) {
+        if (cancelled || error.name === "AbortError") {
           return;
         }
 
+        if (loadingLesson || !lesson) {
+          // A missing lesson/account is handled separately
+          // below if no lesson was loaded.
+        }
+
+        setLessonError((previous) => previous);
         setExtractionStatus("error");
         setExtractionError(
           error instanceof TypeError
             ? "Cannot connect to the backend. Make sure the server is running on port 5000."
-            : error.message ||
-                "Could not process this lesson."
+            : error.message || "Could not process this lesson."
         );
+
+        // If the lesson wasn't loaded, show the access error.
+        setLesson((current) => {
+          if (!current) {
+            setLessonError(
+              error.message || "Unable to load lesson."
+            );
+          }
+          return current;
+        });
+      } finally {
+        if (!cancelled) setLoadingLesson(false);
       }
     }
 
-    if (lesson) {
-      loadLesson();
-    }
+    loadLesson();
 
     return () => {
       cancelled = true;
@@ -151,7 +225,7 @@ export default function LessonDetails() {
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [lessonId, lesson?.id, lesson?.fileName]);
+  }, [id, lessonId]);
 
   async function generateAI(type) {
     if (
@@ -170,6 +244,7 @@ export default function LessonDetails() {
         `${API_URL}/api/ai/generate`,
         {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
@@ -184,98 +259,101 @@ export default function LessonDetails() {
 
       if (!response.ok) {
         throw new Error(
-          result.error ||
-            "AI generation failed."
+          result.error || "AI generation failed."
         );
       }
 
       if (type === "explanation") {
-        setExplanation(result.content);
+        setExplanation(result.content || "");
       } else {
-        setSummary(result.content);
+        setSummary(result.content || "");
       }
     } catch (error) {
       setAiError(
-        error instanceof TypeError
-          ? "Cannot connect to the backend."
-          : error.message ||
-              "Something went wrong."
+        error.message || "Something went wrong."
       );
     } finally {
       setAiLoading("");
     }
   }
 
+  async function sendChatMessage() {
+    const question = chatQuestion.trim();
 
-  
-async function sendChatMessage() {
-  const question = chatQuestion.trim();
-
-  if (
-    !question ||
-    !extractedText ||
-    extractionStatus !== "success" ||
-    chatLoading
-  ) {
-    return;
-  }
-
-  setChatQuestion("");
-  setChatError("");
-  setChatLoading(true);
-
-  setChatMessages((previous) => [
-    ...previous,
-    {
-      role: "user",
-      content: question,
-    },
-  ]);
-
-  try {
-    const response = await fetch(
-      `${API_URL}/api/ai/chat`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lessonText: extractedText,
-          question,
-        }),
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        result.error || "Could not send your message."
-      );
+    if (
+      !question ||
+      !extractedText ||
+      extractionStatus !== "success" ||
+      chatLoading
+    ) {
+      return;
     }
+
+    setChatQuestion("");
+    setChatError("");
+    setChatLoading(true);
 
     setChatMessages((previous) => [
       ...previous,
-      {
-        role: "assistant",
-        content: result.answer,
-      },
+      { role: "user", content: question },
     ]);
-  } catch (error) {
-    setChatError(
-      error.message || "Something went wrong."
-    );
-  } finally {
-    setChatLoading(false);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/ai/chat`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lessonText: extractedText,
+            question,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Could not send your message."
+        );
+      }
+
+      setChatMessages((previous) => [
+        ...previous,
+        {
+          role: "assistant",
+          content: result.answer || "",
+        },
+      ]);
+    } catch (error) {
+      setChatError(
+        error.message || "Something went wrong."
+      );
+    } finally {
+      setChatLoading(false);
+    }
   }
-}
+
+  if (loadingLesson) {
+    return (
+      <div className="lesson-details-page">
+        <p>Loading your lesson...</p>
+      </div>
+    );
+  }
 
   if (!lesson) {
     return (
       <div className="lesson-details-page">
         <h1>Lesson Not Found</h1>
-
+        <p role="alert">
+          {lessonError ||
+            "This lesson is not available in your account."}
+        </p>
         <Link
           to={`/subjects/${id}`}
           className="back-link"
@@ -287,7 +365,7 @@ async function sendChatMessage() {
     );
   }
 
-  const isPdf = lesson.fileName
+  const isPdf = (lesson.fileName || "")
     .toLowerCase()
     .endsWith(".pdf");
 
@@ -316,25 +394,8 @@ async function sendChatMessage() {
 
   const ready = extractionStatus === "success";
 
- function AIResult({ content }) {
-  return (
-    <div
-      style={{
-        marginTop: "20px",
-        padding: "24px",
-        border: "1px solid #e5e7eb",
-        borderRadius: "16px",
-        background: "#ffffff",
-      }}
-    >
-      <AIResponse content={content} />
-    </div>
-  );
-}
-
   return (
     <div className="lesson-details-page">
-      {/* BACK BUTTON */}
       <Link
         to={`/subjects/${id}`}
         className="back-link"
@@ -343,7 +404,6 @@ async function sendChatMessage() {
         Back to Subject
       </Link>
 
-      {/* LESSON HEADER */}
       <header className="lesson-details-header">
         <h1>{lesson.title}</h1>
         <p>
@@ -363,25 +423,20 @@ async function sendChatMessage() {
             <LoaderCircle size={24} />
             <div>
               <h2>Processing Your Lesson</h2>
-              <p>
-                Reading your uploaded study material...
-              </p>
+              <p>Reading your uploaded study material...</p>
             </div>
           </div>
         )}
 
         {ready && (
           <div className="study-section-heading">
-            <CheckCircle2
-              size={24}
-              color="#16a34a"
-            />
+            <CheckCircle2 size={24} color="#16a34a" />
             <div>
               <h2>Lesson Ready</h2>
               <p>
                 Successfully extracted{" "}
-                {characterCount.toLocaleString()}{" "}
-                characters from your study material.
+                {characterCount.toLocaleString()} characters
+                from your study material.
               </p>
             </div>
           </div>
@@ -392,10 +447,7 @@ async function sendChatMessage() {
             className="study-section-heading"
             role="alert"
           >
-            <AlertCircle
-              size={24}
-              color="#dc2626"
-            />
+            <AlertCircle size={24} color="#dc2626" />
             <div>
               <h2>Lesson Processing Failed</h2>
               <p>{extractionError}</p>
@@ -419,14 +471,10 @@ async function sendChatMessage() {
               type="button"
               role="tab"
               id={`tab-${tab.id}`}
-              aria-selected={
-                activeTab === tab.id
-              }
+              aria-selected={activeTab === tab.id}
               aria-controls="study-tab-panel"
               className={`lesson-tab ${
-                activeTab === tab.id
-                  ? "active"
-                  : ""
+                activeTab === tab.id ? "active" : ""
               }`}
               onClick={() => {
                 setActiveTab(tab.id);
@@ -447,7 +495,6 @@ async function sendChatMessage() {
         role="tabpanel"
         aria-labelledby={`tab-${activeTab}`}
       >
-        {/* EXPLANATION */}
         {activeTab === "explanation" && (
           <div>
             <div className="study-section-heading">
@@ -460,7 +507,7 @@ async function sendChatMessage() {
               step-by-step AI explanations.
             </p>
 
-            {!explanation && (
+            {!explanation ? (
               <div className="study-feature-placeholder">
                 <BookOpen size={38} />
                 <h3>Your AI Explanation</h3>
@@ -469,7 +516,6 @@ async function sendChatMessage() {
                     ? "Your lesson is ready. Generate an AI explanation based on your study material."
                     : "Please wait until your lesson is processed."}
                 </p>
-
                 <button
                   type="button"
                   className="btn-primary"
@@ -484,12 +530,9 @@ async function sendChatMessage() {
                     : "Generate Explanation"}
                 </button>
               </div>
-            )}
-
-            {explanation && (
+            ) : (
               <>
                 <AIResult content={explanation} />
-
                 <button
                   type="button"
                   className="btn-primary"
@@ -509,7 +552,6 @@ async function sendChatMessage() {
           </div>
         )}
 
-        {/* SUMMARY */}
         {activeTab === "summary" && (
           <div>
             <div className="study-section-heading">
@@ -518,28 +560,24 @@ async function sendChatMessage() {
             </div>
 
             <p>
-              Review the most important concepts
-              and key takeaways from your lesson.
+              Review the most important concepts and
+              key takeaways from your lesson.
             </p>
 
-            {!summary && (
+            {!summary ? (
               <div className="study-feature-placeholder">
                 <FileText size={38} />
                 <h3>Your Lesson Summary</h3>
-
                 <p>
                   {ready
                     ? "Your lesson is ready for AI summarization."
                     : "Please wait until your lesson is processed."}
                 </p>
-
                 <button
                   type="button"
                   className="btn-primary"
                   disabled={!ready || !!aiLoading}
-                  onClick={() =>
-                    generateAI("summary")
-                  }
+                  onClick={() => generateAI("summary")}
                 >
                   <Sparkles size={18} />
                   {aiLoading === "summary"
@@ -547,20 +585,15 @@ async function sendChatMessage() {
                     : "Generate Summary"}
                 </button>
               </div>
-            )}
-
-            {summary && (
+            ) : (
               <>
                 <AIResult content={summary} />
-
                 <button
                   type="button"
                   className="btn-primary"
                   style={{ marginTop: "20px" }}
                   disabled={!!aiLoading}
-                  onClick={() =>
-                    generateAI("summary")
-                  }
+                  onClick={() => generateAI("summary")}
                 >
                   <Sparkles size={18} />
                   {aiLoading === "summary"
@@ -572,118 +605,110 @@ async function sendChatMessage() {
           </div>
         )}
 
-        
-        {/* AI CHAT */}
         {activeTab === "chat" && (
-        <div>
+          <div>
             <div className="study-section-heading">
-            <MessageCircle size={25} />
-            <h2>AI Study Assistant</h2>
+              <MessageCircle size={25} />
+              <h2>AI Study Assistant</h2>
             </div>
 
-            <p>
-            Ask questions about your uploaded lesson.
-            </p>
+            <p>Ask questions about your uploaded lesson.</p>
 
             <div className="study-chat-box">
-            {chatMessages.length === 0 && (
+              {chatMessages.length === 0 && (
                 <div className="study-chat-message">
-                <Sparkles size={22} />
-                <p>
+                  <Sparkles size={22} />
+                  <p>
                     Hello! I'm your AI study assistant.
                     Ask me anything about this lesson.
-                </p>
+                  </p>
                 </div>
-            )}
+              )}
 
-            {chatMessages.map((message, index) => (
+              {chatMessages.map((message, index) => (
                 <div
-                key={index}
-                className="study-chat-message"
-                style={{
+                  key={index}
+                  className="study-chat-message"
+                  style={{
                     marginBottom: "14px",
                     padding: "16px",
                     borderRadius: "12px",
                     background:
-                    message.role === "user"
+                      message.role === "user"
                         ? "#eeeaff"
                         : "#f8f9fd",
-                }}
+                  }}
                 >
-                <strong>
+                  <strong>
                     {message.role === "user"
-                    ? "You"
-                    : "LearnQuest AI"}
-                </strong>
+                      ? "You"
+                      : "LearnQuest AI"}
+                  </strong>
 
-                {message.role === "assistant" ? (
+                  {message.role === "assistant" ? (
                     <AIResponse content={message.content} />
-                ) : (
+                  ) : (
                     <p>{message.content}</p>
-                )}
+                  )}
                 </div>
-            ))}
+              ))}
 
-            {chatLoading && (
+              {chatLoading && (
                 <p aria-live="polite">
-                LearnQuest AI is thinking...
+                  LearnQuest AI is thinking...
                 </p>
-            )}
+              )}
             </div>
 
             {chatError && (
-            <p className="form-error" role="alert">
+              <p className="form-error" role="alert">
                 {chatError}
-            </p>
+              </p>
             )}
 
             <form
-            className="study-chat-input"
-            onSubmit={(event) => {
+              className="study-chat-input"
+              onSubmit={(event) => {
                 event.preventDefault();
                 sendChatMessage();
-            }}
+              }}
             >
-            <input
+              <input
                 type="text"
                 placeholder="Ask a question about this lesson..."
                 aria-label="Ask a question"
                 value={chatQuestion}
                 onChange={(event) =>
-                setChatQuestion(event.target.value)
+                  setChatQuestion(event.target.value)
                 }
                 disabled={!ready || chatLoading}
                 maxLength={2000}
-            />
+              />
 
-            <button
+              <button
                 type="submit"
                 className="btn-primary"
                 disabled={
-                !ready ||
-                chatLoading ||
-                !chatQuestion.trim()
+                  !ready ||
+                  chatLoading ||
+                  !chatQuestion.trim()
                 }
-            >
+              >
                 {chatLoading ? "Sending..." : "Send"}
-            </button>
+              </button>
             </form>
-        </div>
+          </div>
         )}
 
-        
-
-        {/* QUIZ */}
         {activeTab === "quiz" && (
-            <AIQuiz
-              key={lessonId}
-              lessonText={extractedText}
-              lessonId={lessonId}
-              subjectId={id}
-            />
-            )}
+          <AIQuiz
+            key={lessonId}
+            lessonText={extractedText}
+            lessonId={lessonId}
+            subjectId={id}
+          />
+        )}
 
-        {/* AI ERROR */}
         {aiError &&
           (activeTab === "explanation" ||
             activeTab === "summary") && (
@@ -721,10 +746,7 @@ async function sendChatMessage() {
         </div>
 
         {fileError && (
-          <p
-            className="form-error"
-            role="alert"
-          >
+          <p className="form-error" role="alert">
             {fileError}
           </p>
         )}
@@ -756,8 +778,8 @@ async function sendChatMessage() {
             <h3>Extracted Lesson Text</h3>
 
             <p className="lesson-helper">
-              Text successfully retrieved from
-              your uploaded material.
+              Text successfully retrieved from your
+              uploaded material.
             </p>
 
             <div

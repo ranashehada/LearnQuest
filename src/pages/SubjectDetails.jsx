@@ -6,53 +6,183 @@ import {
   FileText,
   Plus,
   Trash2,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getLessons,
   saveLessons,
-  deleteLessonFile
+  deleteLessonFile,
 } from "../utils/lessonStorage";
+
+const API_URL = "http://localhost:5000";
+
+function getUserKey(userId, type) {
+  return `learnquest-user-${userId}-${type}`;
+}
+
+function readArray(key) {
+  try {
+    const value = JSON.parse(
+      localStorage.getItem(key) || "[]"
+    );
+
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function SubjectDetails() {
   const { id } = useParams();
 
-  const [lessons, setLessons] = useState(getLessons);
+  const [userId, setUserId] = useState(null);
+  const [subject, setSubject] = useState(null);
+  const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
 
-  const subjects = JSON.parse(
-    localStorage.getItem("learnquest-subjects") || "[]"
-  );
+  useEffect(() => {
+    let active = true;
 
-  const subject = subjects.find((item) => item.id === id);
+    async function loadSubject() {
+      setLoading(true);
+      setError("");
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Please log in to view this subject."
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.user?.id) {
+          throw new Error(
+            "Unable to identify your account."
+          );
+        }
+
+        if (!active) return;
+
+        const currentUserId = data.user.id;
+
+        const subjects = readArray(
+          getUserKey(currentUserId, "subjects")
+        );
+
+        const foundSubject = subjects.find(
+          (item) => String(item.id) === String(id)
+        );
+
+        // Lessons will be stored separately for each account.
+        const userLessons = readArray(
+          getUserKey(currentUserId, "lessons")
+        );
+
+        setUserId(currentUserId);
+        setSubject(foundSubject || null);
+        setLessons(userLessons);
+      } catch (err) {
+        if (active) {
+          setError(
+            err.message || "Unable to load subject."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadSubject();
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   const subjectLessons = lessons.filter(
-    (lesson) => lesson.subjectId === id
+    (lesson) =>
+      String(lesson.subjectId ?? lesson.subject_id) ===
+      String(id)
   );
 
   async function handleDelete(lesson) {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete "${lesson.title}"?`
-      )
-    ) {
-      return;
-    }
+    if (!userId) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${lesson.title}"?`
+    );
+
+    if (!confirmed) return;
+
+    setDeletingId(lesson.id);
 
     try {
-      await deleteLessonFile(lesson.id);
-      const updated = lessons.filter((item) => item.id !== lesson.id);
-      saveLessons(updated);
+      const updated = lessons.filter(
+        (item) => item.id !== lesson.id
+      );
+
+      // Update this account's lesson list.
+      localStorage.setItem(
+        getUserKey(userId, "lessons"),
+        JSON.stringify(updated)
+      );
+
       setLessons(updated);
+
+      window.dispatchEvent(
+        new Event("learnquest:stats-updated")
+      );
+
+      // File deletion will be handled when we update
+      // lessonStorage for account-specific file ownership.
+      // Do not delete a shared IndexedDB file here.
     } catch {
-      window.alert("Could not delete the lesson. Please try again.");
+      window.alert(
+        "Could not delete the lesson. Please try again."
+      );
+    } finally {
+      setDeletingId(null);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="subject-details-page">
+        <p>Loading subject...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="subject-details-page">
+        <h1>Unable to load subject</h1>
+        <p role="alert">{error}</p>
+        <Link to="/subjects">Back to My Subjects</Link>
+      </div>
+    );
   }
 
   if (!subject) {
     return (
       <div className="subject-details-page">
         <h1>Subject Not Found</h1>
+        <p>
+          This subject does not exist in your account.
+        </p>
         <Link to="/subjects">Back to My Subjects</Link>
       </div>
     );
@@ -60,7 +190,10 @@ export default function SubjectDetails() {
 
   return (
     <div className="subject-details-page">
-      <Link to="/subjects" className="back-link">
+      <Link
+        to="/subjects"
+        className="back-link"
+      >
         <ArrowLeft size={18} />
         Back to My Subjects
       </Link>
@@ -72,6 +205,7 @@ export default function SubjectDetails() {
           </div>
 
           <h1>{subject.name}</h1>
+
           <p>
             {subject.description ||
               "Organize your lessons and study materials."}
@@ -90,18 +224,24 @@ export default function SubjectDetails() {
       <section className="subject-lessons-section">
         <div className="subject-lessons-heading">
           <h2>Lessons</h2>
+
           <span>
             {subjectLessons.length}{" "}
-            {subjectLessons.length === 1 ? "lesson" : "lessons"}
+            {subjectLessons.length === 1
+              ? "lesson"
+              : "lessons"}
           </span>
         </div>
 
         {subjectLessons.length === 0 ? (
           <div className="subject-lessons-empty">
             <FileText size={44} />
+
             <h3>No lessons yet</h3>
+
             <p>
-              Add your first lesson to start your learning journey.
+              Add your first lesson to start your
+              learning journey.
             </p>
 
             <Link
@@ -115,7 +255,10 @@ export default function SubjectDetails() {
         ) : (
           <div className="subject-lesson-list">
             {subjectLessons.map((lesson) => (
-              <article className="subject-lesson-item" key={lesson.id}>
+              <article
+                className="subject-lesson-item"
+                key={lesson.id}
+              >
                 <div className="subject-lesson-icon">
                   <FileText size={24} />
                 </div>
@@ -129,13 +272,15 @@ export default function SubjectDetails() {
                   to={`/subjects/${id}/lessons/${lesson.id}`}
                   className="subject-lesson-open"
                 >
-                  Open Lesson <ArrowRight size={17} />
+                  Open Lesson
+                  <ArrowRight size={17} />
                 </Link>
 
                 <button
                   type="button"
                   className="subject-lesson-delete"
                   aria-label={`Delete ${lesson.title}`}
+                  disabled={deletingId === lesson.id}
                   onClick={() => handleDelete(lesson)}
                 >
                   <Trash2 size={19} />

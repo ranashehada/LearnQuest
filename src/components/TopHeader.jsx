@@ -10,8 +10,11 @@ import {
   Trophy,
   Star,
   ArrowRight,
+  LogOut,
 } from "lucide-react";
 import "./TopHeader.css";
+
+const API_URL = "http://localhost:5000";
 
 const RESULTS_KEY = "learnquest-quiz-results";
 const PROFILE_KEY = "learnquest-profile";
@@ -30,6 +33,8 @@ function readJSON(key, fallback) {
 }
 
 function getLocalDay(dateValue) {
+  if (!dateValue) return null;
+
   const date = new Date(dateValue);
 
   if (Number.isNaN(date.getTime())) return null;
@@ -73,11 +78,14 @@ function getLevelName(level) {
   if (level === 3) return "Achiever";
   if (level === 4) return "Scholar";
   if (level === 5) return "Master";
+
   return "Learning Champion";
 }
 
 export default function TopHeader() {
   const navigate = useNavigate();
+
+  const [account, setAccount] = useState(null);
 
   const [profile, setProfile] = useState({
     name: "Student",
@@ -87,7 +95,47 @@ export default function TopHeader() {
   const [totalXp, setTotalXp] = useState(0);
   const [streak, setStreak] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
+  // Get the real account name and email.
+  useEffect(() => {
+    let active = true;
+
+    async function loadAccount() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          if (active) {
+            navigate("/login", { replace: true });
+          }
+          return;
+        }
+
+        const data = await response.json();
+
+        if (active && data.user) {
+          setAccount(data.user);
+        }
+      } catch (error) {
+        console.error("Unable to load account:", error);
+      }
+    }
+
+    loadAccount();
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
+
+  // Keep the existing profile photo and statistics.
   useEffect(() => {
     function updateStats() {
       const savedProfile = readJSON(PROFILE_KEY, {});
@@ -108,7 +156,6 @@ export default function TopHeader() {
         ? studyTasks
         : [];
 
-      // XP earned from AI quizzes
       const quizXp = results.reduce((total, result) => {
         const earned = Number(result.xpEarned);
 
@@ -126,13 +173,10 @@ export default function TopHeader() {
         );
       }, 0);
 
-      // XP earned from Study Planner tasks
-      // Each task earns XP only once.
       const taskXp =
         tasks.filter((task) => task.xpAwarded === true)
           .length * POINTS_PER_TASK;
 
-      // Combine all earned XP
       setTotalXp(quizXp + taskXp);
 
       const activities = Array.isArray(studyActivity)
@@ -147,7 +191,6 @@ export default function TopHeader() {
         .filter((task) => task.completed && task.completedAt)
         .map((task) => task.completedAt);
 
-      // Study streak includes quiz and task activity.
       setStreak(
         calculateStreak([
           ...activities,
@@ -176,11 +219,45 @@ export default function TopHeader() {
     };
   }, []);
 
+  async function handleLogout() {
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    setLogoutError("");
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Unable to log out. Please try again.");
+      }
+
+      setMenuOpen(false);
+
+      // Do not clear localStorage:
+      // it contains existing learning data and uploaded-file references.
+      navigate("/login", { replace: true });
+    } catch (error) {
+      setLogoutError(error.message);
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
   const level = Math.floor(totalXp / 100) + 1;
   const levelName = getLevelName(level);
   const levelXp = totalXp % 100;
   const xpRemaining = 100 - levelXp;
   const progress = levelXp;
+
+  // Always prioritize the authenticated account's name.
+  const displayName = account?.name || profile.name;
 
   return (
     <header className="lq-gamified-header">
@@ -257,7 +334,12 @@ export default function TopHeader() {
                   </div>
 
                   <div>
-                    <strong>{profile.name}</strong>
+                    <strong>{displayName}</strong>
+
+                    {account?.email && (
+                      <span>{account.email}</span>
+                    )}
+
                     <span>
                       Level {level} · {levelName}
                     </span>
@@ -289,6 +371,35 @@ export default function TopHeader() {
                   My Progress
                   <ArrowRight size={15} />
                 </button>
+
+                <div className="lq-dropdown-divider" />
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                >
+                  <LogOut size={17} />
+
+                  {loggingOut
+                    ? "Logging Out..."
+                    : "Log Out"}
+
+                  <ArrowRight size={15} />
+                </button>
+
+                {logoutError && (
+                  <p
+                    role="alert"
+                    style={{
+                      color: "#dc2626",
+                      fontSize: "12px",
+                      padding: "8px 12px",
+                    }}
+                  >
+                    {logoutError}
+                  </p>
+                )}
               </div>
             )}
           </div>

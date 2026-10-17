@@ -6,42 +6,33 @@ import {
   FileText,
   Target,
   Zap,
-  Flame,
   Trophy,
   ArrowRight,
   Plus,
-  Sparkles,
   Clock3,
   TrendingUp,
   PlayCircle,
   ClipboardCheck,
 } from "lucide-react";
+
 import "./Dashboard.css";
 import FocusTimer from "./FocusTimer";
 
-const SUBJECTS_KEY = "learnquest-subjects";
-const LESSONS_KEY = "learnquest-lessons";
-const RESULTS_KEY = "learnquest-quiz-results";
-const PROFILE_KEY = "learnquest-profile";
-const TASKS_KEY = "learnquest-study-tasks";
+const API_URL = "http://localhost:5000";
 const TASK_XP = 5;
+
+function userKey(userId, type) {
+  return `learnquest-user-${userId}-${type}`;
+}
 
 function readArray(key) {
   try {
-    const value = JSON.parse(localStorage.getItem(key) || "[]");
+    const value = JSON.parse(
+      localStorage.getItem(key) || "[]"
+    );
     return Array.isArray(value) ? value : [];
   } catch {
     return [];
-  }
-}
-
-function readProfile() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(PROFILE_KEY) || "{}"
-    ) || {};
-  } catch {
-    return {};
   }
 }
 
@@ -59,10 +50,14 @@ function getXP(result) {
     : 0;
 }
 
-function getLocalDay(dateValue) {
-  const date = new Date(dateValue);
+function getLocalDay(value) {
+  if (!value) return null;
 
-  if (Number.isNaN(date.getTime())) return null;
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
 
   return [
     date.getFullYear(),
@@ -81,7 +76,7 @@ function getLastSevenDays(results, tasks) {
 
     const key = getLocalDay(date);
 
-    const xp = results.reduce((sum, result) => {
+    const quizXP = results.reduce((sum, result) => {
       return getLocalDay(result.completedAt) === key
         ? sum + getXP(result)
         : sum;
@@ -99,7 +94,7 @@ function getLastSevenDays(results, tasks) {
       label: date.toLocaleDateString("en-US", {
         weekday: "short",
       }),
-      xp: xp + taskXP,
+      xp: quizXP + taskXP,
     });
   }
 
@@ -112,6 +107,7 @@ function getLevelName(level) {
   if (level === 3) return "Achiever";
   if (level === 4) return "Scholar";
   if (level === 5) return "Master";
+
   return "Learning Champion";
 }
 
@@ -129,22 +125,104 @@ function formatDate(value) {
 }
 
 export default function Dashboard() {
+  const [account, setAccount] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [data, setData] = useState({
     subjects: [],
     lessons: [],
     results: [],
     tasks: [],
-    profile: {},
   });
 
   useEffect(() => {
+    let active = true;
+
+    async function loadAccount() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Please log in to view your dashboard."
+          );
+        }
+
+        const result = await response.json();
+
+        if (!result.user?.id) {
+          throw new Error(
+            "Unable to identify your account."
+          );
+        }
+
+        if (active) {
+          setAccount(result.user);
+        }
+      } catch (err) {
+        if (active) {
+          setError(
+            err.message || "Unable to load dashboard."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadAccount();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!account?.id) return;
+
     function loadData() {
+      const userId = account.id;
+
+      const subjects = readArray(
+        userKey(userId, "subjects")
+      );
+
+      const lessons = readArray(
+        userKey(userId, "lessons")
+      );
+
+      const results = readArray(
+        userKey(userId, "quiz-results")
+      );
+
+      const tasks = readArray(
+        userKey(userId, "study-tasks")
+      );
+
+      // Show only lessons belonging to this user's subjects.
+      const subjectIds = new Set(
+        subjects.map((subject) => String(subject.id))
+      );
+
+      const safeLessons = lessons.filter((lesson) =>
+        subjectIds.has(
+          String(lesson.subjectId ?? lesson.subject_id)
+        )
+      );
+
       setData({
-        subjects: readArray(SUBJECTS_KEY),
-        lessons: readArray(LESSONS_KEY),
-        results: readArray(RESULTS_KEY),
-        tasks: readArray(TASKS_KEY),
-        profile: readProfile(),
+        subjects,
+        lessons: safeLessons,
+        results,
+        tasks,
       });
     }
 
@@ -165,24 +243,20 @@ export default function Dashboard() {
         loadData
       );
     };
-  }, []);
+  }, [account?.id]);
 
-  const {
-    subjects,
-    lessons,
-    results,
-    tasks,
-    profile,
-  } = data;
+  const { subjects, lessons, results, tasks } = data;
 
   const totalXP = useMemo(() => {
     const quizXP = results.reduce(
       (sum, result) => sum + getXP(result),
       0
     );
-    const taskXP = tasks.filter(
-      (task) => task.xpAwarded === true
-    ).length * TASK_XP;
+
+    const taskXP =
+      tasks.filter((task) => task.xpAwarded === true)
+        .length * TASK_XP;
+
     return quizXP + taskXP;
   }, [results, tasks]);
 
@@ -220,7 +294,6 @@ export default function Dashboard() {
       quiz,
     }));
 
-    // Only completed tasks are included in recent activity.
     const completedTasks = tasks
       .filter((task) => task.completed && task.completedAt)
       .map((task, index) => ({
@@ -231,40 +304,55 @@ export default function Dashboard() {
       }));
 
     return [...quizzes, ...completedTasks]
-      .sort((a, b) =>
-        new Date(b.completedAt || 0) -
-        new Date(a.completedAt || 0)
+      .sort(
+        (a, b) =>
+          new Date(b.completedAt || 0) -
+          new Date(a.completedAt || 0)
       )
       .slice(0, 4);
   }, [results, tasks]);
 
-  const recentLessons = useMemo(
-    () =>
-      [...lessons]
-        .sort(
-          (a, b) =>
-            new Date(
-              b.updatedAt ||
+  const recentLessons = useMemo(() => {
+    return [...lessons]
+      .sort(
+        (a, b) =>
+          new Date(
+            b.updatedAt ||
               b.createdAt ||
               b.uploadedAt ||
               0
-            ) -
-            new Date(
-              a.updatedAt ||
+          ) -
+          new Date(
+            a.updatedAt ||
               a.createdAt ||
               a.uploadedAt ||
               0
-            )
-        )
-        .slice(0, 3),
-    [lessons]
-  );
+          )
+      )
+      .slice(0, 3);
+  }, [lessons]);
 
   const firstName =
-    typeof profile.name === "string" &&
-    profile.name.trim()
-      ? profile.name.trim().split(/\s+/)[0]
+    typeof account?.name === "string" &&
+    account.name.trim()
+      ? account.name.trim().split(/\s+/)[0]
       : "Student";
+
+  if (loading) {
+    return (
+      <div className="lq-dashboard">
+        <p>Loading your dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="lq-dashboard">
+        <p role="alert">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="lq-dashboard">
@@ -296,7 +384,7 @@ export default function Dashboard() {
 
       <FocusTimer />
 
-      {/* REAL STATS */}
+      {/* DASHBOARD STATISTICS */}
       <section className="lq-dashboard-stats">
         <div className="lq-dashboard-stat">
           <div className="lq-stat-icon purple">
@@ -362,12 +450,13 @@ export default function Dashboard() {
           <strong>{totalXP}</strong>
 
           <small>
-            {100 - levelProgress} XP until Level {level + 1}
+            {100 - levelProgress} XP until Level{" "}
+            {level + 1}
           </small>
         </div>
       </section>
 
-      {/* ACTIVITY AND QUIZZES */}
+      {/* XP JOURNEY AND ACTIVITY */}
       <section className="lq-dashboard-two-columns">
         <div className="lq-dashboard-panel">
           <div className="lq-panel-heading">
@@ -376,6 +465,7 @@ export default function Dashboard() {
                 <TrendingUp size={20} />
                 Your XP Journey
               </h2>
+
               <p>
                 Points earned during the last 7 days
               </p>
@@ -405,7 +495,8 @@ export default function Dashboard() {
                           ? "4px"
                           : `${Math.max(
                               10,
-                              (day.xp / maxWeeklyXP) * 100
+                              (day.xp / maxWeeklyXP) *
+                                100
                             )}%`,
                     }}
                     title={`${day.xp} XP`}
@@ -421,11 +512,13 @@ export default function Dashboard() {
 
           <div className="lq-chart-footer">
             <Zap size={16} />
+
             <span>
               {weeklyXP.reduce(
                 (sum, day) => sum + day.xp,
                 0
-              )} XP earned in the last 7 days
+              )}{" "}
+              XP earned in the last 7 days
             </span>
           </div>
         </div>
@@ -437,78 +530,127 @@ export default function Dashboard() {
                 <ClipboardCheck size={20} />
                 Recent Activity
               </h2>
-              <p>Your latest quiz and study achievements</p>
+
+              <p>
+                Your latest quiz and study achievements
+              </p>
             </div>
           </div>
 
           {recentActivity.length > 0 ? (
             <div className="lq-recent-quiz-list">
-              {recentActivity.map((activity, index) => {
-                if (activity.type === "task") {
-                  const task = activity.task;
-                  const subject = subjects.find(
-                    (item) => String(item.id) === String(task.subjectId)
+              {recentActivity.map(
+                (activity, index) => {
+                  if (activity.type === "task") {
+                    const task = activity.task;
+
+                    const subject = subjects.find(
+                      (item) =>
+                        String(item.id) ===
+                        String(task.subjectId)
+                    );
+
+                    return (
+                      <div
+                        className="lq-recent-quiz"
+                        key={activity.key}
+                      >
+                        <div className="lq-recent-quiz-icon">
+                          <ClipboardCheck size={19} />
+                        </div>
+
+                        <div className="lq-recent-quiz-info">
+                          <strong>
+                            {task.title ||
+                              "Study Task"}
+                          </strong>
+
+                          <span>
+                            {subject?.name ||
+                              "Study Planner"}
+                            {" · "}
+                            {formatDate(
+                              task.completedAt
+                            )}
+                          </span>
+                        </div>
+
+                        <div className="lq-recent-quiz-result">
+                          <strong>Done</strong>
+                          <span>
+                            {task.xpAwarded
+                              ? "+5 XP"
+                              : "Task"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const quiz = activity.quiz;
+
+                  const lesson = lessons.find(
+                    (item) =>
+                      String(item.id) ===
+                      String(quiz.lessonId)
                   );
 
+                  const title =
+                    lesson?.title ||
+                    lesson?.name ||
+                    lesson?.fileName ||
+                    `Practice Quiz ${index + 1}`;
+
                   return (
-                    <div className="lq-recent-quiz" key={activity.key}>
+                    <div
+                      className="lq-recent-quiz"
+                      key={activity.key}
+                    >
                       <div className="lq-recent-quiz-icon">
-                        <ClipboardCheck size={19} />
+                        <Trophy size={19} />
                       </div>
+
                       <div className="lq-recent-quiz-info">
-                        <strong>{task.title || "Study Task"}</strong>
+                        <strong>{title}</strong>
+
                         <span>
-                          {subject?.name || "Study Planner"}
+                          {quiz.difficulty ||
+                            "medium"}
                           {" · "}
-                          {formatDate(task.completedAt)}
+                          {formatDate(
+                            quiz.completedAt
+                          )}
                         </span>
                       </div>
+
                       <div className="lq-recent-quiz-result">
-                        <strong>Done</strong>
-                        <span>{task.xpAwarded ? "+5 XP" : "Task"}</span>
+                        <strong>
+                          {Number(
+                            quiz.percentage
+                          ) || 0}
+                          %
+                        </strong>
+
+                        <span>
+                          +{getXP(quiz)} XP
+                        </span>
                       </div>
                     </div>
                   );
                 }
-
-                const quiz = activity.quiz;
-                const lesson = lessons.find(
-                  (item) => String(item.id) === String(quiz.lessonId)
-                );
-                const title =
-                  lesson?.title ||
-                  lesson?.name ||
-                  lesson?.fileName ||
-                  `Practice Quiz ${index + 1}`;
-
-                return (
-                  <div className="lq-recent-quiz" key={activity.key}>
-                    <div className="lq-recent-quiz-icon">
-                      <Trophy size={19} />
-                    </div>
-                    <div className="lq-recent-quiz-info">
-                      <strong>{title}</strong>
-                      <span>
-                        {quiz.difficulty || "medium"}
-                        {" · "}
-                        {formatDate(quiz.completedAt)}
-                      </span>
-                    </div>
-                    <div className="lq-recent-quiz-result">
-                      <strong>{Number(quiz.percentage) || 0}%</strong>
-                      <span>+{getXP(quiz)} XP</span>
-                    </div>
-                  </div>
-                );
-              })}
+              )}
             </div>
           ) : (
             <div className="lq-dashboard-small-empty">
               <Trophy size={30} />
+
               <h3>No activity yet</h3>
+
               <p>
-                Complete a quiz or study task to start earning XP.
+                Complete a quiz or study task to
+                start earning XP.
               </p>
+
               <Link to="/study-planner">
                 Open Study Planner
                 <ArrowRight size={15} />
@@ -518,7 +660,7 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* SUBJECTS AND RECENT LESSONS */}
+      {/* SUBJECTS AND LESSONS */}
       <section className="lq-dashboard-two-columns lq-dashboard-bottom">
         <div className="lq-dashboard-panel">
           <div className="lq-panel-heading">
@@ -527,6 +669,7 @@ export default function Dashboard() {
                 <BookOpen size={20} />
                 My Subjects
               </h2>
+
               <p>
                 Continue exploring your courses
               </p>
@@ -543,47 +686,57 @@ export default function Dashboard() {
 
           {subjects.length > 0 ? (
             <div className="lq-subject-preview-list">
-              {subjects.slice(0, 4).map((subject, index) => {
-                const subjectLessons = lessons.filter(
-                  (lesson) =>
-                    String(lesson.subjectId) ===
-                    String(subject.id)
-                );
+              {subjects
+                .slice(0, 4)
+                .map((subject, index) => {
+                  const subjectLessons =
+                    lessons.filter(
+                      (lesson) =>
+                        String(
+                          lesson.subjectId ??
+                            lesson.subject_id
+                        ) === String(subject.id)
+                    );
 
-                return (
-                  <Link
-                    key={subject.id || index}
-                    to={`/subjects/${subject.id}`}
-                    className="lq-subject-preview"
-                  >
-                    <div className="lq-subject-preview-icon">
-                      <BookOpen size={20} />
-                    </div>
+                  return (
+                    <Link
+                      key={subject.id || index}
+                      to={`/subjects/${subject.id}`}
+                      className="lq-subject-preview"
+                    >
+                      <div className="lq-subject-preview-icon">
+                        <BookOpen size={20} />
+                      </div>
 
-                    <div>
-                      <strong>
-                        {subject.name ||
-                          subject.title ||
-                          "Untitled Subject"}
-                      </strong>
-                      <span>
-                        {subjectLessons.length} lessons
-                      </span>
-                    </div>
+                      <div>
+                        <strong>
+                          {subject.name ||
+                            subject.title ||
+                            "Untitled Subject"}
+                        </strong>
 
-                    <ArrowRight size={17} />
-                  </Link>
-                );
-              })}
+                        <span>
+                          {subjectLessons.length}{" "}
+                          lessons
+                        </span>
+                      </div>
+
+                      <ArrowRight size={17} />
+                    </Link>
+                  );
+                })}
             </div>
           ) : (
             <div className="lq-dashboard-small-empty">
               <BookOpen size={30} />
+
               <h3>No subjects yet</h3>
+
               <p>
                 Add your first subject to organize
                 your learning materials.
               </p>
+
               <Link to="/subjects">
                 <Plus size={15} />
                 Add Subject
@@ -599,6 +752,7 @@ export default function Dashboard() {
                 <Clock3 size={20} />
                 Continue Learning
               </h2>
+
               <p>
                 Jump back into your study materials
               </p>
@@ -607,65 +761,71 @@ export default function Dashboard() {
 
           {recentLessons.length > 0 ? (
             <div className="lq-lesson-preview-list">
-              {recentLessons.map((lesson, index) => {
-                const subjectId =
-                  lesson.subjectId ||
-                  lesson.subject_id;
+              {recentLessons.map(
+                (lesson, index) => {
+                  const subjectId =
+                    lesson.subjectId ??
+                    lesson.subject_id;
 
-                const lessonId = lesson.id;
+                  const lessonId = lesson.id;
 
-                const canOpen =
-                  subjectId != null &&
-                  lessonId != null;
+                  const canOpen =
+                    subjectId != null &&
+                    lessonId != null;
 
-                const content = (
-                  <>
-                    <div className="lq-lesson-preview-icon">
-                      <PlayCircle size={21} />
+                  const content = (
+                    <>
+                      <div className="lq-lesson-preview-icon">
+                        <PlayCircle size={21} />
+                      </div>
+
+                      <div>
+                        <strong>
+                          {lesson.title ||
+                            lesson.name ||
+                            lesson.fileName ||
+                            "Untitled Lesson"}
+                        </strong>
+
+                        <span>
+                          Open your study workspace
+                        </span>
+                      </div>
+
+                      <ArrowRight size={17} />
+                    </>
+                  );
+
+                  return canOpen ? (
+                    <Link
+                      key={lessonId}
+                      to={`/subjects/${subjectId}/lessons/${lessonId}`}
+                      className="lq-lesson-preview"
+                    >
+                      {content}
+                    </Link>
+                  ) : (
+                    <div
+                      key={lessonId || index}
+                      className="lq-lesson-preview"
+                    >
+                      {content}
                     </div>
-
-                    <div>
-                      <strong>
-                        {lesson.title ||
-                          lesson.name ||
-                          lesson.fileName ||
-                          "Untitled Lesson"}
-                      </strong>
-                      <span>
-                        Open your study workspace
-                      </span>
-                    </div>
-
-                    <ArrowRight size={17} />
-                  </>
-                );
-
-                return canOpen ? (
-                  <Link
-                    key={lessonId}
-                    to={`/subjects/${subjectId}/lessons/${lessonId}`}
-                    className="lq-lesson-preview"
-                  >
-                    {content}
-                  </Link>
-                ) : (
-                  <div
-                    key={lessonId || index}
-                    className="lq-lesson-preview"
-                  >
-                    {content}
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
             </div>
           ) : (
             <div className="lq-dashboard-small-empty">
               <FileText size={30} />
+
               <h3>No lessons uploaded</h3>
+
               <p>
                 Upload a PDF or PowerPoint lesson
                 to start studying with AI.
               </p>
+
               <Link to="/subjects">
                 Go to My Subjects
                 <ArrowRight size={15} />

@@ -7,14 +7,42 @@ const multer = require("multer");
 const JSZip = require("jszip");
 const pdfParse = require("pdf-parse");
 const { GoogleGenAI } = require("@google/genai");
+const session = require("express-session");
+const authRoutes = require("./authRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const GEMINI_MODEL =
   process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: "2mb" }));
+
+if (!process.env.SESSION_SECRET) {
+  throw new Error("SESSION_SECRET is missing from server/.env");
+}
+
+app.use(
+  session({
+    name: "learnquest.sid",
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: false,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    },
+  })
+);
+
+app.use("/api/auth", authRoutes);
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -42,6 +70,7 @@ app.get("/", (req, res) => {
 // Extract PPTX Text
 // -------------------------------------
 
+
 async function extractPptxText(buffer) {
   const zip = await JSZip.loadAsync(buffer);
 
@@ -50,41 +79,64 @@ async function extractPptxText(buffer) {
       /^ppt\/slides\/slide\d+\.xml$/.test(name)
     )
     .sort((a, b) => {
-      const aNumber = Number(
+      const numberA = Number(
         a.match(/slide(\d+)\.xml$/)[1]
       );
-      const bNumber = Number(
+      const numberB = Number(
         b.match(/slide(\d+)\.xml$/)[1]
       );
-      return aNumber - bNumber;
+
+      return numberA - numberB;
     });
+
+  function decodeXml(text) {
+    return text
+      .replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
+        String.fromCodePoint(parseInt(hex, 16))
+      )
+      .replace(/&#(\d+);/g, (_, number) =>
+        String.fromCodePoint(Number(number))
+      )
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'");
+  }
 
   const slides = [];
 
   for (const fileName of slideFiles) {
     const xml = await zip.files[fileName].async("string");
 
-    const text = xml
-      .replace(/<\/a:p>/g, "\n")
-      .replace(/<a:br\s*\/>/g, "\n")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .replace(/[ \t]+/g, " ")
-      .trim();
+    const paragraphs = xml.match(/<a:p(?:\s[^>]*)?>[\s\S]*?<\/a:p>/g) || [];
 
-    if (text) {
+    const lines = paragraphs.map((paragraph) => {
+      const pieces = [];
+
+      const textPattern = /<a:t(?:\s[^>]*)?>([\s\S]*?)<\/a:t>/g;
+
+      for (const match of paragraph.matchAll(textPattern)) {
+        pieces.push(decodeXml(match[1]));
+      }
+
+      return pieces.join("").trim();
+    }).filter(Boolean);
+
+    if (lines.length > 0) {
+      const slideNumber = Number(
+        fileName.match(/slide(\d+)\.xml$/)[1]
+      );
+
       slides.push(
-        `Slide ${slides.length + 1}\n${text}`
+        `Slide ${slideNumber}\n${lines.join("\n")}`
       );
     }
   }
 
   return slides.join("\n\n");
 }
+
 
 // -------------------------------------
 // Extract PDF / PPTX
@@ -122,11 +174,22 @@ app.post(
         });
       }
 
+      
       if (!extractedText.trim()) {
+        console.warn("No text extracted from:", {
+          fileName,
+          extension,
+          fileSize: req.file.size,
+        });
+
         return res.status(422).json({
-          error: "No readable text was found in this file.",
+          error:
+            extension === "pdf"
+              ? "No selectable text was found in this PDF. It may contain scanned pages or images. OCR is required to read those pages."
+              : "No readable text was found in this PowerPoint. Check whether the slides contain editable text or only images.",
         });
       }
+
 
       return res.json({
         success: true,

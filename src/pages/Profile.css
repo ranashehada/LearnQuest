@@ -437,3 +437,26 @@
     height: 70px;
   }
 }
+.lq-password-section {
+  margin-top: 24px;
+}
+
+.lq-password-visibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.lq-password-visibility input {
+  width: 16px;
+  height: 16px;
+  accent-color: #8b5cf6;
+}
+
+.lq-password-section .lq-profile-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

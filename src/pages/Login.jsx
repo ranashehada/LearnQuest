@@ -1,14 +1,58 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GraduationCap, Eye, EyeOff } from "lucide-react";
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    // Real authentication will be added with the backend.
+    setError("");
+
+    const data = new FormData(e.currentTarget);
+
+    const email = String(data.get("email") || "").trim();
+    const password = String(data.get("password") || "");
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/login",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.error || "Login failed. Please try again."
+        );
+      }
+
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setError(
+        err.message || "Could not connect to the server."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -24,8 +68,10 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <label htmlFor="loginEmail">Email Address</label>
+
           <input
             id="loginEmail"
+            name="email"
             type="email"
             placeholder="Enter your email"
             autoComplete="email"
@@ -33,30 +79,50 @@ export default function Login() {
           />
 
           <label htmlFor="loginPassword">Password</label>
+
           <div className="password-field">
             <input
               id="loginPassword"
+              name="password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               autoComplete="current-password"
               required
             />
+
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={
+                showPassword ? "Hide password" : "Show password"
+              }
             >
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              {showPassword ? (
+                <EyeOff size={20} />
+              ) : (
+                <Eye size={20} />
+              )}
             </button>
           </div>
 
-          <button type="submit" className="btn-primary auth-submit">
-            Log In
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="btn-primary auth-submit"
+            disabled={loading}
+          >
+            {loading ? "Logging In..." : "Log In"}
           </button>
         </form>
 
         <p className="auth-footer">
-          Don't have an account? <Link to="/signup">Sign Up</Link>
+          Don't have an account?{" "}
+          <Link to="/signup">Sign Up</Link>
         </p>
       </div>
     </div>

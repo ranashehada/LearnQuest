@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -7,17 +7,29 @@ import {
   Search,
   Pencil,
   Trash2,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 
+const API_URL = "http://localhost:5000";
+
+function getSubjectsKey(userId) {
+  return `learnquest-user-${userId}-subjects`;
+}
+
+function readSubjects(key) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function MySubjects() {
-  const [subjects, setSubjects] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("learnquest-subjects")) || [];
-    } catch {
-      return [];
-    }
-  });
+  const [userId, setUserId] = useState(null);
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [accountError, setAccountError] = useState("");
 
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -26,12 +38,81 @@ export default function MySubjects() {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadUserSubjects() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/auth/me`,
+          {
+            credentials: "include",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Please log in to view your subjects."
+          );
+        }
+
+        const data = await response.json();
+
+        if (!data.user?.id) {
+          throw new Error("Unable to identify your account.");
+        }
+
+        if (!active) return;
+
+        const id = data.user.id;
+        const key = getSubjectsKey(id);
+
+        setUserId(id);
+        setSubjects(readSubjects(key));
+      } catch (err) {
+        if (active) {
+          setAccountError(
+            err.message || "Unable to load your subjects."
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadUserSubjects();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   function saveSubjects(updated) {
-    setSubjects(updated);
-    localStorage.setItem(
-      "learnquest-subjects",
-      JSON.stringify(updated)
-    );
+    if (!userId) {
+      setAccountError(
+        "Your account could not be identified. Please log in again."
+      );
+      return;
+    }
+
+    try {
+      localStorage.setItem(
+        getSubjectsKey(userId),
+        JSON.stringify(updated)
+      );
+
+      setSubjects(updated);
+
+      window.dispatchEvent(
+        new Event("learnquest:stats-updated")
+      );
+    } catch {
+      setError(
+        "Unable to save subjects in this browser."
+      );
+    }
   }
 
   function openAddForm() {
@@ -50,8 +131,8 @@ export default function MySubjects() {
     setShowForm(true);
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
+  function handleSubmit(event) {
+    event.preventDefault();
 
     if (!name.trim()) {
       setError("Subject name is required.");
@@ -64,7 +145,7 @@ export default function MySubjects() {
           ? {
               ...subject,
               name: name.trim(),
-              description: description.trim()
+              description: description.trim(),
             }
           : subject
       );
@@ -75,7 +156,7 @@ export default function MySubjects() {
         id: crypto.randomUUID(),
         name: name.trim(),
         description: description.trim(),
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       saveSubjects([...subjects, newSubject]);
@@ -94,12 +175,36 @@ export default function MySubjects() {
 
     if (!confirmed) return;
 
-    saveSubjects(subjects.filter((s) => s.id !== subject.id));
+    saveSubjects(
+      subjects.filter((item) => item.id !== subject.id)
+    );
   }
 
   const filteredSubjects = subjects.filter((subject) =>
-    subject.name.toLowerCase().includes(search.toLowerCase())
+    subject.name
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="subjects-page">
+        <h1>My Subjects</h1>
+        <p>Loading your subjects...</p>
+      </div>
+    );
+  }
+
+  if (accountError) {
+    return (
+      <div className="subjects-page">
+        <h1>My Subjects</h1>
+        <p className="form-error" role="alert">
+          {accountError}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="subjects-page">
@@ -109,7 +214,10 @@ export default function MySubjects() {
           <p>Organize and manage your learning subjects.</p>
         </div>
 
-        <button className="btn-primary" onClick={openAddForm}>
+        <button
+          className="btn-primary"
+          onClick={openAddForm}
+        >
           <Plus size={18} />
           Add Subject
         </button>
@@ -117,27 +225,37 @@ export default function MySubjects() {
 
       <div className="subjects-search">
         <Search size={20} />
+
         <input
           type="search"
           placeholder="Search subjects..."
           aria-label="Search subjects"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(event) =>
+            setSearch(event.target.value)
+          }
         />
       </div>
 
       {showForm && (
         <div className="subject-form-card">
           <h2>
-            {editingId ? "Edit Subject" : "Create New Subject"}
+            {editingId
+              ? "Edit Subject"
+              : "Create New Subject"}
           </h2>
 
           <form onSubmit={handleSubmit}>
-            <label htmlFor="subjectName">Subject Name *</label>
+            <label htmlFor="subjectName">
+              Subject Name *
+            </label>
+
             <input
               id="subjectName"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) =>
+                setName(event.target.value)
+              }
               placeholder="e.g. Human Computer Interaction"
               maxLength={100}
               required
@@ -146,10 +264,13 @@ export default function MySubjects() {
             <label htmlFor="subjectDescription">
               Description (Optional)
             </label>
+
             <textarea
               id="subjectDescription"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(event) =>
+                setDescription(event.target.value)
+              }
               placeholder="What will you study in this subject?"
               rows={3}
               maxLength={500}
@@ -170,8 +291,13 @@ export default function MySubjects() {
                 Cancel
               </button>
 
-              <button type="submit" className="btn-primary">
-                {editingId ? "Save Changes" : "Create Subject"}
+              <button
+                type="submit"
+                className="btn-primary"
+              >
+                {editingId
+                  ? "Save Changes"
+                  : "Create Subject"}
               </button>
             </div>
           </form>
@@ -182,8 +308,15 @@ export default function MySubjects() {
         <div className="subjects-empty">
           <BookOpen size={44} />
           <h2>No subjects yet</h2>
-          <p>Create your first subject to get started.</p>
-          <button className="btn-primary" onClick={openAddForm}>
+
+          <p>
+            Create your first subject to get started.
+          </p>
+
+          <button
+            className="btn-primary"
+            onClick={openAddForm}
+          >
             <Plus size={18} />
             Add Your First Subject
           </button>
@@ -192,12 +325,16 @@ export default function MySubjects() {
         <div className="subjects-empty">
           <Search size={40} />
           <h2>No matching subjects</h2>
+
           <p>Try a different search term.</p>
         </div>
       ) : (
         <div className="subjects-grid">
           {filteredSubjects.map((subject) => (
-            <article className="subject-card" key={subject.id}>
+            <article
+              className="subject-card"
+              key={subject.id}
+            >
               <div className="subject-card-top">
                 <div className="subject-icon">
                   <BookOpen size={26} />
@@ -207,7 +344,9 @@ export default function MySubjects() {
                   <button
                     aria-label={`Edit ${subject.name}`}
                     title="Edit subject"
-                    onClick={() => openEditForm(subject)}
+                    onClick={() =>
+                      openEditForm(subject)
+                    }
                   >
                     <Pencil size={18} />
                   </button>
@@ -215,7 +354,9 @@ export default function MySubjects() {
                   <button
                     aria-label={`Delete ${subject.name}`}
                     title="Delete subject"
-                    onClick={() => deleteSubject(subject)}
+                    onClick={() =>
+                      deleteSubject(subject)
+                    }
                   >
                     <Trash2 size={18} />
                   </button>
@@ -223,6 +364,7 @@ export default function MySubjects() {
               </div>
 
               <h3>{subject.name}</h3>
+
               <p>
                 {subject.description ||
                   "No description added yet."}
@@ -232,7 +374,8 @@ export default function MySubjects() {
                 to={`/subjects/${subject.id}`}
                 className="subject-open-link"
               >
-                Open Subject <ArrowRight size={17} />
+                Open Subject
+                <ArrowRight size={17} />
               </Link>
             </article>
           ))}
