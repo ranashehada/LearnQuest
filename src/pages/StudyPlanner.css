@@ -1,0 +1,486 @@
+
+.lq-planner-page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 45px;
+  color: #29233f;
+}
+
+.lq-planner-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 28px;
+  margin-bottom: 23px;
+  border-radius: 21px;
+  background: linear-gradient(110deg, #eee8ff, #faf7ff);
+}
+
+.lq-planner-eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+  color: #7b5bd7;
+}
+
+.lq-planner-hero h1 {
+  margin: 9px 0;
+  font-size: 30px;
+}
+
+.lq-planner-hero p {
+  margin: 0;
+  color: #85799f;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.lq-planner-hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  flex-shrink: 0;
+  border-radius: 20px;
+  background: #795bdc;
+  color: white;
+}
+
+.lq-planner-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 21px;
+}
+
+.lq-planner-stat {
+  padding: 20px;
+  border: 1px solid #eae6f3;
+  border-radius: 17px;
+  background: white;
+}
+
+.lq-planner-stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+}
+
+.lq-planner-stat-icon.purple {
+  background: #eee9ff;
+  color: #795bdc;
+}
+
+.lq-planner-stat-icon.green {
+  background: #e8f8ef;
+  color: #18875c;
+}
+
+.lq-planner-stat-icon.orange {
+  background: #fff0e3;
+  color: #d88732;
+}
+
+.lq-planner-stat-icon.yellow {
+  background: #fff6db;
+  color: #c28b16;
+}
+
+.lq-planner-stat strong {
+  display: block;
+  font-size: 27px;
+}
+
+.lq-planner-stat p {
+  margin: 6px 0 0;
+  color: #9992ac;
+  font-size: 12px;
+}
+
+.lq-planner-card {
+  padding: 25px;
+  margin-bottom: 20px;
+  border: 1px solid #eae6f3;
+  border-radius: 19px;
+  background: white;
+}
+
+.lq-planner-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 23px;
+}
+
+.lq-planner-section-heading h2 {
+  margin: 0 0 6px;
+  font-size: 19px;
+}
+
+.lq-planner-section-heading p {
+  margin: 0;
+  color: #9992ac;
+  font-size: 12px;
+}
+
+.lq-planner-progress-value {
+  color: #795bdc;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.lq-planner-progress-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #eee9f7;
+}
+
+.lq-planner-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #795bdc, #ac8dff);
+  transition: width 0.3s ease;
+}
+
+.lq-planner-progress-note {
+  margin: 12px 0 0;
+  color: #9992ac;
+  font-size: 12px;
+}
+
+.lq-planner-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 17px;
+  border: none;
+  border-radius: 11px;
+  background: #795bdc;
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.lq-planner-primary:hover {
+  background: #6648c8;
+}
+
+.lq-planner-secondary {
+  padding: 12px 17px;
+  border: 1px solid #e4dff0;
+  border-radius: 11px;
+  background: white;
+  color: #625b75;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lq-planner-form {
+  padding: 20px;
+  margin-bottom: 22px;
+  border: 1px solid #e8e0f5;
+  border-radius: 15px;
+  background: #faf8ff;
+}
+
+.lq-planner-form label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.lq-planner-form input,
+.lq-planner-form select {
+  width: 100%;
+  min-height: 45px;
+  padding: 11px 13px;
+  border: 1px solid #e4dff0;
+  border-radius: 10px;
+  background: white;
+  color: #29233f;
+  font: inherit;
+  font-size: 13px;
+}
+
+.lq-planner-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 17px;
+}
+
+.lq-planner-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 11px;
+  margin-top: 19px;
+}
+
+.lq-planner-error {
+  margin-top: 12px;
+  color: #c44556;
+  font-size: 13px;
+}
+
+.lq-planner-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.lq-planner-filters button {
+  padding: 9px 15px;
+  border: 1px solid #e8e3f1;
+  border-radius: 10px;
+  background: white;
+  color: #807791;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lq-planner-filters button.active {
+  background: #eee9ff;
+  border-color: #c7b7f8;
+  color: #795bdc;
+}
+
+.lq-planner-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lq-planner-task {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 17px;
+  border: 1px solid #eee9f3;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.lq-planner-task.completed {
+  background: #fcfbff;
+}
+
+.lq-planner-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #b6adc8;
+  cursor: pointer;
+}
+
+.lq-planner-task.completed .lq-planner-check {
+  color: #2eaa75;
+}
+
+.lq-planner-task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.lq-planner-task-content h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.lq-planner-task.completed h3 {
+  color: #9992ac;
+  text-decoration: line-through;
+}
+
+.lq-planner-task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+}
+
+.lq-planner-task-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #9992ac;
+  font-size: 11px;
+}
+
+.lq-planner-task-meta span.overdue {
+  color: #d25d66;
+}
+
+.lq-planner-xp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 9px;
+  border-radius: 8px;
+  background: #fff5da;
+  color: #ad801c;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lq-planner-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #aaa0b7;
+  cursor: pointer;
+}
+
+.lq-planner-delete:hover {
+  background: #fff0f2;
+  color: #d25d66;
+}
+
+.lq-planner-empty {
+  padding: 45px 15px;
+  text-align: center;
+}
+
+.lq-planner-empty > svg {
+  color: #9278d9;
+}
+
+.lq-planner-empty h3 {
+  margin: 15px 0 8px;
+  font-size: 17px;
+}
+
+.lq-planner-empty p {
+  color: #9992ac;
+  font-size: 13px;
+}
+
+.lq-planner-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 13px;
+  background: #eee9ff;
+  color: #795bdc;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .lq-planner-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .lq-planner-hero {
+    padding: 19px;
+  }
+
+  .lq-planner-hero h1 {
+    font-size: 24px;
+  }
+
+  .lq-planner-hero-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .lq-planner-stats,
+  .lq-planner-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lq-planner-card {
+    padding: 17px;
+  }
+
+  .lq-planner-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lq-planner-task {
+    flex-wrap: wrap;
+  }
+}
+
+/* DARK MODE */
+
+html[data-lq-theme="dark"] .lq-planner-page {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .lq-planner-hero {
+  background: linear-gradient(110deg, #302548, #242035);
+}
+
+html[data-lq-theme="dark"] .lq-planner-hero h1,
+html[data-lq-theme="dark"] .lq-planner-section-heading h2,
+html[data-lq-theme="dark"] .lq-planner-stat strong,
+html[data-lq-theme="dark"] .lq-planner-task-content h3 {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .lq-planner-stat,
+html[data-lq-theme="dark"] .lq-planner-card,
+html[data-lq-theme="dark"] .lq-planner-task {
+  background: #242035;
+  border-color: #39334e;
+}
+
+html[data-lq-theme="dark"] .lq-planner-form,
+html[data-lq-theme="dark"] .lq-planner-task.completed {
+  background: #2c273f;
+  border-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .lq-planner-form input,
+html[data-lq-theme="dark"] .lq-planner-form select,
+html[data-lq-theme="dark"] .lq-planner-secondary,
+html[data-lq-theme="dark"] .lq-planner-filters button {
+  background: #302a45;
+  border-color: #514766;
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .lq-planner-filters button.active {
+  background: #443461;
+  color: #e3d8ff;
+}
+
+html[data-lq-theme="dark"] .lq-planner-footer {
+  background: #302548;
+  color: #d9cbff;
+}
+
+html[data-lq-theme="dark"] .lq-planner-task.completed h3 {
+  color: #a99fbc;
+}

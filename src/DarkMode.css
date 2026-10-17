@@ -1,0 +1,183 @@
+
+/* LEARNQUEST DARK MODE */
+
+html[data-lq-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-lq-theme="dark"] body,
+html[data-lq-theme="dark"] .dashboard-layout,
+html[data-lq-theme="dark"] .subjects-page {
+  background: #151321;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .dashboard-sidebar,
+html[data-lq-theme="dark"] .lq-gamified-header,
+html[data-lq-theme="dark"] .lq-dashboard-stat,
+html[data-lq-theme="dark"] .lq-dashboard-panel,
+html[data-lq-theme="dark"] .lq-progress-card,
+html[data-lq-theme="dark"] .lq-progress-stat,
+html[data-lq-theme="dark"] .lq-profile-hero,
+html[data-lq-theme="dark"] .lq-profile-stat,
+html[data-lq-theme="dark"] .lq-profile-editor,
+html[data-lq-theme="dark"] .lq-settings-card,
+html[data-lq-theme="dark"] .subject-card,
+html[data-lq-theme="dark"] .subject-form-card,
+html[data-lq-theme="dark"] .subjects-search,
+html[data-lq-theme="dark"] .subject-lessons-section,
+html[data-lq-theme="dark"] .lesson-form-section,
+html[data-lq-theme="dark"] .lesson-content-card {
+  background: #242035;
+  border-color: #39334e;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-welcome,
+html[data-lq-theme="dark"] .lq-progress-hero,
+html[data-lq-theme="dark"] .lq-profile-heading,
+html[data-lq-theme="dark"] .lq-settings-hero,
+html[data-lq-theme="dark"] .lq-level-panel {
+  background: linear-gradient(110deg, #302548, #242035);
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-dashboard,
+  .lq-progress-page,
+  .lq-profile-page,
+  .lq-settings-page,
+  .lq-dashboard-welcome h1,
+  .lq-dashboard-stat strong,
+  .lq-panel-heading h2,
+  .lq-progress-hero h1,
+  .lq-progress-stat strong,
+  .lq-progress-card-heading h2,
+  .lq-progress-level h3,
+  .lq-profile-heading h1,
+  .lq-profile-identity-text h2,
+  .lq-profile-stat strong,
+  .lq-profile-editor-heading h2,
+  .lq-settings-hero h1,
+  .lq-settings-card-heading h2,
+  .subjects-heading h1,
+  .subject-card h3,
+  .subject-details-header h1,
+  .add-lesson-heading h1,
+  .lesson-details-header h1
+) {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-dashboard-welcome p,
+  .lq-panel-heading p,
+  .lq-progress-hero p,
+  .lq-progress-card-heading p,
+  .lq-profile-heading p,
+  .lq-profile-editor-heading p,
+  .lq-settings-hero p,
+  .lq-settings-card-heading p,
+  .subjects-heading p,
+  .subject-card > p,
+  .subject-details-header p,
+  .lesson-details-header p
+) {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-recent-quiz,
+  .lq-subject-preview,
+  .lq-lesson-preview,
+  .lq-dashboard-small-empty,
+  .lq-progress-history-row,
+  .lq-progress-achievement,
+  .lq-profile-photo-editor,
+  .lq-settings-theme-option,
+  .subject-lesson-item,
+  .subject-lessons-empty,
+  .lesson-selected-file,
+  .lesson-file-info,
+  .lesson-info,
+  .lesson-upload-zone,
+  .study-chat-box,
+  .study-feature-placeholder
+) {
+  background: #2c273f;
+  border-color: #433b59;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-recent-quiz-info strong,
+  .lq-subject-preview strong,
+  .lq-lesson-preview strong,
+  .lq-progress-history-info strong,
+  .lq-progress-achievement strong,
+  .lq-dashboard-small-empty h3,
+  .lq-settings-theme-name
+) {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-profile-input-wrap,
+  .lq-settings-fields select,
+  .subjects-search input,
+  .subject-form-card input,
+  .subject-form-card textarea,
+  .lesson-form-section input,
+  .lesson-form-section textarea,
+  .study-chat-input input
+) {
+  background: #2c273f;
+  color: #f3efff;
+  border-color: #514766;
+}
+
+html[data-lq-theme="dark"] .lq-profile-input-wrap input {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .dashboard-nav a {
+  color: #c7bfdc;
+}
+
+html[data-lq-theme="dark"] .dashboard-nav a:hover,
+html[data-lq-theme="dark"] .dashboard-nav a.active {
+  background: #443461;
+  color: #e3d8ff;
+}
+
+html[data-lq-theme="dark"] .lq-settings-theme-option.selected {
+  background: #382d50;
+  border-color: #aa8aff;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-profile-upload,
+  .lq-profile-remove,
+  .lesson-browse-btn,
+  .lesson-cancel
+) {
+  background: #302a45;
+  border-color: #514766;
+  color: #d9cbff;
+}
+
+/* Shared AI content and header surfaces */
+
+html[data-lq-theme="dark"] :is(
+  .study-chat-message,
+  .lesson-ai-placeholder,
+  .lq-profile-dropdown
+) {
+  background: #2c273f;
+  color: #f3efff;
+  border-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .study-chat-message p {
+  color: #d2c9e4;
+}

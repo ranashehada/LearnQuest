@@ -1,0 +1,139 @@
+
+.ai-response {
+  color: #24304a;
+  font-size: 15px;
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+}
+
+.ai-response h1,
+.ai-response h2,
+.ai-response h3 {
+  color: #171d37;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+
+.ai-response h1 {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 20px;
+}
+
+.ai-response h2 {
+  font-size: 20px;
+  font-weight: 750;
+  margin: 32px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e8e9f3;
+}
+
+.ai-response h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 24px 0 10px;
+}
+
+.ai-response p {
+  margin: 12px 0 16px;
+}
+
+.ai-response strong {
+  color: #5145b5;
+  font-weight: 750;
+}
+
+.ai-response ul,
+.ai-response ol {
+  padding-left: 25px;
+  margin: 14px 0 22px;
+}
+
+.ai-response li {
+  margin-bottom: 10px;
+  padding-left: 5px;
+}
+
+.ai-response li::marker {
+  color: #6554d8;
+}
+
+.ai-response blockquote {
+  margin: 22px 0;
+  padding: 16px 20px;
+  background: #f3f0ff;
+  border-left: 4px solid #6d5ce7;
+  border-radius: 0 12px 12px 0;
+  color: #39336e;
+}
+
+.ai-response blockquote p {
+  margin: 0;
+}
+
+.ai-response code {
+  background: #f0effa;
+  color: #5745b5;
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.ai-response pre {
+  background: #1c2340;
+  color: #f7f7ff;
+  padding: 18px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin: 18px 0;
+}
+
+.ai-response pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.ai-response table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 22px 0;
+  font-size: 14px;
+}
+
+.ai-response th,
+.ai-response td {
+  border: 1px solid #e5e7f0;
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ai-response th {
+  background: #f1efff;
+  color: #373070;
+  font-weight: 700;
+}
+
+.ai-response tr:nth-child(even) {
+  background: #fafaff;
+}
+
+.ai-response hr {
+  border: none;
+  border-top: 1px solid #e6e8f1;
+  margin: 28px 0;
+}
+
+.ai-response a {
+  color: #5545bd;
+  text-decoration: underline;
+}
+
+.ai-response > :first-child {
+  margin-top: 0;
+}
+
+.ai-response > :last-child {
+  margin-bottom: 0;
+}

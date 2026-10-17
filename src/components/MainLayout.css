@@ -1,0 +1,15 @@
+
+/*
+  Keep the existing dashboard-layout and
+  dashboard-main styles from the project.
+
+  This file only adds safe layout adjustments.
+*/
+
+.dashboard-main {
+  min-width: 0;
+}
+
+.lq-top-header + * {
+  min-width: 0;
+}

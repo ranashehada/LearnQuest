@@ -1,0 +1,365 @@
+
+/* =====================================
+   LEARNQUEST GAMIFIED HEADER
+===================================== */
+
+.lq-gamified-header {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 20px 26px;
+  margin-bottom: 22px;
+  background: #ffffff;
+  border: 1px solid #eeeaf8;
+  border-radius: 20px;
+  box-shadow: 0 4px 18px rgba(64, 49, 126, 0.035);
+}
+
+/* MAIN HEADER */
+
+.lq-gamified-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.lq-gamified-welcome {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+}
+
+.lq-welcome-icon {
+  width: 45px;
+  height: 45px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: #eee9ff;
+  color: #7256d9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lq-gamified-welcome h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #24213c;
+}
+
+.lq-gamified-welcome p {
+  margin: 0;
+  font-size: 12px;
+  color: #938da9;
+}
+
+/* RIGHT SIDE */
+
+.lq-gamified-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lq-game-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 42px;
+  padding: 0 13px;
+  border-radius: 13px;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.lq-game-badge small {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.lq-streak-badge {
+  background: #fff0e8;
+  color: #ed742c;
+}
+
+.lq-xp-badge {
+  background: #f0eaff;
+  color: #7858db;
+}
+
+/* PROFILE */
+
+.lq-profile-wrapper {
+  position: relative;
+}
+
+.lq-profile-trigger {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 9px 3px 4px;
+  border: 1px solid #ece8f7;
+  border-radius: 14px;
+  background: white;
+  color: #8e85ab;
+  cursor: pointer;
+}
+
+.lq-profile-trigger:hover {
+  background: #f9f7ff;
+}
+
+.lq-game-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #eae3ff;
+  color: #7557d9;
+}
+
+.lq-game-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* DROPDOWN */
+
+.lq-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 250px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #ece8f7;
+  border-radius: 17px;
+  box-shadow: 0 14px 35px rgba(42, 30, 87, 0.13);
+  z-index: 100;
+}
+
+.lq-dropdown-user {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 6px;
+}
+
+.lq-dropdown-user > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lq-dropdown-user strong {
+  font-size: 14px;
+  color: #29253f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lq-dropdown-user span {
+  font-size: 11px;
+  color: #958da8;
+}
+
+.lq-dropdown-divider {
+  height: 1px;
+  background: #eeeaf6;
+  margin: 10px 0;
+}
+
+.lq-profile-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #514b68;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.lq-profile-dropdown button:hover {
+  background: #f4f0ff;
+  color: #7254d8;
+}
+
+.lq-profile-dropdown button svg:last-child {
+  margin-left: auto;
+}
+
+/* LEVEL PANEL */
+
+.lq-level-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 18px;
+  padding: 15px 18px;
+  border-radius: 15px;
+  background: linear-gradient(
+    105deg,
+    #f1ecff 0%,
+    #f8f5ff 100%
+  );
+}
+
+.lq-level-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+}
+
+.lq-level-icon {
+  width: 41px;
+  height: 41px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    #9678ef,
+    #7050d3
+  );
+  box-shadow: 0 5px 12px rgba(114, 80, 211, 0.2);
+}
+
+.lq-level-caption {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #9a8bbb;
+  margin-bottom: 5px;
+}
+
+.lq-level-left h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #32234f;
+  font-weight: 800;
+}
+
+.lq-level-left h3 span {
+  font-weight: 600;
+  color: #8268bc;
+}
+
+/* LEVEL PROGRESS */
+
+.lq-level-progress-area {
+  flex: 1;
+  max-width: 390px;
+}
+
+.lq-level-progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+  font-size: 12px;
+  color: #81739f;
+}
+
+.lq-level-progress-info strong {
+  color: #7655d4;
+  font-size: 12px;
+}
+
+.lq-level-progress-track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 100px;
+  background: #e2d8fa;
+}
+
+.lq-level-progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  background: linear-gradient(
+    90deg,
+    #9979f1,
+    #7151d7
+  );
+  transition: width 0.4s ease;
+}
+
+.lq-level-progress-area p {
+  margin: 7px 0 0;
+  font-size: 11px;
+  color: #9b8eb6;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+  .lq-gamified-header {
+    padding: 16px;
+  }
+
+  .lq-level-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .lq-level-progress-area {
+    max-width: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .lq-gamified-main {
+    flex-wrap: wrap;
+  }
+
+  .lq-gamified-welcome {
+    width: 100%;
+  }
+
+  .lq-gamified-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .lq-game-badge {
+    padding: 0 10px;
+  }
+
+  .lq-level-panel {
+    padding: 13px;
+  }
+
+  .lq-level-left {
+    min-width: 0;
+  }
+
+  .lq-profile-dropdown {
+    width: 220px;
+  }
+}
