@@ -26,3 +26,8 @@ dist-ssr
 # Environment variables - keep API keys private
 .env
 server/.env
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
