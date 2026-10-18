@@ -17,7 +17,18 @@ const GEMINI_MODEL =
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin(origin, callback) {
+      // Allow the local Vite development server, including alternate ports
+      // and the equivalent 127.0.0.1 address.
+      if (
+        !origin ||
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("CORS origin is not allowed."));
+    },
     credentials: true,
   })
 );

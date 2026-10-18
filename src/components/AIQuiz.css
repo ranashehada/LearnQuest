@@ -481,8 +481,74 @@
   margin-top: 15px;
 }
 
+.lq-review-toggle {
+  margin-left: 10px;
+}
+
+.lq-quiz-review {
+  margin-top: 28px;
+}
+
+.lq-quiz-review > h3 {
+  margin: 0 0 6px;
+  color: #34324f;
+}
+
+.lq-quiz-review > p {
+  margin: 0 0 18px;
+  color: #777b91;
+}
+
+.lq-review-card {
+  margin-bottom: 16px;
+  padding: 20px;
+  border: 1px solid #e8e7f2;
+  border-left: 5px solid #d34c54;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.lq-review-card.is-correct {
+  border-left-color: #299451;
+}
+
+.lq-review-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  color: #6b55d4;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.lq-review-card.is-correct .lq-review-card-header strong {
+  color: #16834a;
+}
+
+.lq-review-card.is-incorrect .lq-review-card-header strong {
+  color: #d34c54;
+}
+
+.lq-review-card h4 {
+  margin: 0 0 14px;
+  color: #20233d;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.lq-review-card > p {
+  margin: 8px 0;
+  color: #4d5068;
+  line-height: 1.5;
+}
+
 @media (max-width: 600px) {
   .lq-game-actions .ai-quiz-primary {
     width: 100%;
+  }
+
+  .lq-review-toggle {
+    margin: 10px 0 0;
   }
 }

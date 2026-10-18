@@ -80,6 +80,7 @@ export default function AIQuiz({
   const [answers, setAnswers] = useState([]);
   const [xp, setXp] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -141,6 +142,7 @@ export default function AIQuiz({
     setAnswers([]);
     setXp(0);
     setFinished(false);
+    setReviewMode(false);
 
     try {
       const response = await fetch(
@@ -234,6 +236,7 @@ export default function AIQuiz({
       percentage: finalPercentage,
       xpEarned: score * POINTS_PER_QUESTION,
       maxXp: totalQuestions * POINTS_PER_QUESTION,
+      answers: finalAnswers,
       completedAt: new Date().toISOString(),
     };
 
@@ -273,7 +276,20 @@ export default function AIQuiz({
     }
 
     setFinished(true);
-    saveQuizResult(answers);
+    const finalAnswer = {
+      questionIndex: currentIndex,
+      selectedAnswer,
+      correctAnswer: currentQuestion.correctAnswer,
+      isCorrect: selectedAnswer === currentQuestion.correctAnswer,
+    };
+    const finalAnswers = answers.some(
+      (answer) => answer.questionIndex === currentIndex
+    )
+      ? answers
+      : [...answers, finalAnswer];
+
+    setAnswers(finalAnswers);
+    saveQuizResult(finalAnswers);
   }
 
   function resetQuiz() {
@@ -290,6 +306,7 @@ export default function AIQuiz({
     setChecked(false);
     setXp(0);
     setFinished(false);
+    setReviewMode(false);
     setError("");
     setSaveError("");
   }
@@ -601,7 +618,63 @@ export default function AIQuiz({
             <RotateCcw size={18} />
             Try Another Quiz
           </button>
+
+          <button
+            type="button"
+            className="ai-quiz-secondary lq-review-toggle"
+            onClick={() => setReviewMode((previous) => !previous)}
+            aria-expanded={reviewMode}
+          >
+            {reviewMode ? "Hide Review" : "Review Answers"}
+          </button>
         </div>
+      )}
+
+      {finished && reviewMode && (
+        <section className="lq-quiz-review" aria-label="Quiz answer review">
+          <h3>Answer Review</h3>
+          <p>Review your answers and explanations from this quiz.</p>
+
+          {questions.map((question, index) => {
+            const answer = answers.find(
+              (item) => item.questionIndex === index
+            );
+            const selected = answer?.selectedAnswer;
+            const correct = answer?.correctAnswer ?? question.correctAnswer;
+            const wasCorrect = answer?.isCorrect;
+
+            return (
+              <article
+                className={`lq-review-card ${wasCorrect ? "is-correct" : "is-incorrect"}`}
+                key={`${question.question}-${index}`}
+              >
+                <div className="lq-review-card-header">
+                  <span>Question {index + 1}</span>
+                  <strong>{wasCorrect ? "Correct" : "Incorrect"}</strong>
+                </div>
+
+                <h4>{question.question}</h4>
+
+                <p>
+                  <strong>Your answer:</strong>{" "}
+                  {selected === undefined
+                    ? "Not answered"
+                    : question.options[selected]}
+                </p>
+
+                <p>
+                  <strong>Correct answer:</strong>{" "}
+                  {question.options[correct]}
+                </p>
+
+                <div className="ai-quiz-explanation">
+                  <strong>Explanation</strong>
+                  <p>{question.explanation}</p>
+                </div>
+              </article>
+            );
+          })}
+        </section>
       )}
 
       {saveError && (
