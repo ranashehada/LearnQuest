@@ -20,6 +20,8 @@ import FocusTimer from "./FocusTimer";
 
 const API_URL = "http://localhost:5000";
 const TASK_XP = 5;
+const RESULTS_KEY = "learnquest-quiz-results";
+const TASKS_KEY = "learnquest-study-tasks";
 
 function userKey(userId, type) {
   return `learnquest-user-${userId}-${type}`;
@@ -199,13 +201,9 @@ export default function Dashboard() {
         userKey(userId, "lessons")
       );
 
-      const results = readArray(
-        userKey(userId, "quiz-results")
-      );
+      const results = readArray(RESULTS_KEY);
 
-      const tasks = readArray(
-        userKey(userId, "study-tasks")
-      );
+      const tasks = readArray(TASKS_KEY);
 
       // Show only lessons belonging to this user's subjects.
       const subjectIds = new Set(
@@ -313,10 +311,32 @@ export default function Dashboard() {
   }, [results, tasks]);
 
   const recentLessons = useMemo(() => {
+    let lastOpenedLessonId = null;
+    let lastOpenedSubjectId = null;
+
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(userKey(account?.id, "last-opened-lesson")) || "null"
+      );
+      lastOpenedLessonId = saved?.lessonId;
+      lastOpenedSubjectId = saved?.subjectId;
+    } catch {
+      // Recent uploads remain available if the saved pointer is invalid.
+    }
+
     return [...lessons]
       .sort(
-        (a, b) =>
-          new Date(
+        (a, b) => {
+          const aIsLastOpened =
+            String(a.id) === String(lastOpenedLessonId) &&
+            String(a.subjectId ?? a.subject_id) === String(lastOpenedSubjectId);
+          const bIsLastOpened =
+            String(b.id) === String(lastOpenedLessonId) &&
+            String(b.subjectId ?? b.subject_id) === String(lastOpenedSubjectId);
+
+          if (aIsLastOpened !== bIsLastOpened) return aIsLastOpened ? -1 : 1;
+
+          return new Date(
             b.updatedAt ||
               b.createdAt ||
               b.uploadedAt ||
@@ -327,10 +347,11 @@ export default function Dashboard() {
               a.createdAt ||
               a.uploadedAt ||
               0
-          )
+          );
+        }
       )
       .slice(0, 3);
-  }, [lessons]);
+  }, [lessons, account]);
 
   const firstName =
     typeof account?.name === "string" &&
@@ -403,7 +424,7 @@ export default function Dashboard() {
           <Link to="/study-planner" className="lq-dashboard-action">
             <ClipboardCheck size={22} />
             <span>
-              <strong>Plan your next study task</strong>
+              <strong>Plan your next study session</strong>
               <small>Keep your work organized</small>
             </span>
             <ArrowRight size={17} />
@@ -685,12 +706,11 @@ export default function Dashboard() {
               <h3>No activity yet</h3>
 
               <p>
-                Complete a quiz or study task to
-                start earning XP.
+                Complete a quiz to start earning XP.
               </p>
 
-              <Link to="/study-planner">
-                Open Study Planner
+              <Link to="/subjects">
+                Open Subjects
                 <ArrowRight size={15} />
               </Link>
             </div>

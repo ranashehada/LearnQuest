@@ -149,6 +149,24 @@ LearnQuest is currently a development-stage academic project.
 - Scanned PDF documents may require OCR for text extraction.
 - Additional security measures and persistent server-side storage are needed before production deployment.
 
+## Study Planner
+
+The planner schedules study sessions by date, start time, and duration. Link a session to a subject and lesson, then open the explanation, summary, or quiz directly from the session. Sessions can be edited, completed, reopened, or removed with an undo action. Overlapping sessions are rejected; exceeding a preferred daily time limit shows a warning.
+
+Use **Study time & exams** to set a daily minute budget (0 means a day off) and one exam date per subject. Up to three editable, 20-minute suggestions are calculated from existing lessons and the latest quiz scores. Earlier exams take priority, and suggestions fit the next seven days between 08:00 and 22:00. The score thresholds are simple planning rules, not a measurement of mastery. Suggestions make no AI requests and are only saved after the student accepts a schedule.
+
+Plans are saved separately for each authenticated account in this browser. Only session details and subject/lesson IDs are stored, with a limit of 100 pending and the most recent 30 completed sessions. Existing tasks remain available under **Previous tasks**, and their earned XP is preserved. New scheduled sessions do not award XP. Clearing browser data removes the plan; there is no cloud sync yet.
+
+### Checking the planner
+
+Run `npm run test:planner` for date, overlap, retention, suggestion, and lesson-link checks, and `npm run build` for the production build. For a manual check:
+
+1. Set study time and an exam date, then schedule a linked lesson.
+2. Reload the page and check the saved time, subject, and lesson.
+3. Try an overlapping time; confirm the validation message and that no extra session is saved.
+4. Edit, complete, reopen, remove, and undo a session.
+5. Open the lesson and verify the selected study tab. Check the week view and dialogs on a narrow screen.
+
 ## 🔮 Future Improvements
 
 - Cloud-based database and file storage.

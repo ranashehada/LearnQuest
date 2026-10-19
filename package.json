@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "test:planner": "node --test src/utils/studyPlanner.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

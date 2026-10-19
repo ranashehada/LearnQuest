@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   FileText,
@@ -104,6 +104,9 @@ function getAIErrorMessage(error, fallback) {
 
 export default function LessonDetails() {
   const { id, lessonId } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const initialTab = ["explanation", "summary", "quiz"].includes(requestedTab) ? requestedTab : "explanation";
 
   const [lesson, setLesson] = useState(null);
   const [loadingLesson, setLoadingLesson] = useState(true);
@@ -156,7 +159,7 @@ export default function LessonDetails() {
       setChatQuestion("");
       setChatError("");
       setChatRetryQuestion("");
-      setActiveTab("explanation");
+      setActiveTab(initialTab);
 
       const savedAIResults = readSavedAIResults(lessonId);
       setExplanation(savedAIResults.explanation || "");
@@ -188,6 +191,15 @@ export default function LessonDetails() {
           throw new Error(
             "This lesson was not found in your account."
           );
+        }
+
+        try {
+          localStorage.setItem(
+            `learnquest-user-${user.id}-last-opened-lesson`,
+            JSON.stringify({ lessonId: String(lessonId), subjectId: String(id) })
+          );
+        } catch (storageError) {
+          console.warn("Could not remember the last opened lesson:", storageError);
         }
 
         setLesson(foundLesson);
@@ -284,7 +296,7 @@ export default function LessonDetails() {
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [id, lessonId]);
+  }, [id, lessonId, initialTab]);
 
   async function generateAI(type) {
     if (
