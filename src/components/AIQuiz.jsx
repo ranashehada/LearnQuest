@@ -51,6 +51,52 @@ function readQuizSettings() {
   }
 }
 
+function normalizeQuestion(question) {
+  return String(question || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function readRecentQuestions(lessonId) {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(RESULTS_KEY) || "[]"
+    );
+
+    if (!Array.isArray(saved)) return [];
+
+    return saved
+      .filter((result) => result.lessonId === (lessonId || null))
+      .flatMap((result) =>
+        Array.isArray(result.questions) ? result.questions : []
+      )
+      .filter((question) => typeof question === "string" && question.trim())
+      .slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+function hasDuplicateQuestions(questions, previousQuestions) {
+  const seen = new Set(
+    previousQuestions.map(normalizeQuestion).filter(Boolean)
+  );
+
+  for (const question of questions) {
+    const normalized = normalizeQuestion(question.question);
+
+    if (!normalized || seen.has(normalized)) {
+      return true;
+    }
+
+    seen.add(normalized);
+  }
+
+  return false;
+}
+
 export default function AIQuiz({
   lessonText,
   lessonId,
@@ -145,36 +191,57 @@ export default function AIQuiz({
     setReviewMode(false);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/ai/quiz`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lessonText,
-            questionCount,
-            difficulty,
-          }),
+      let previousQuestions = readRecentQuestions(lessonId);
+      let result = null;
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await fetch(
+          `${API_URL}/api/ai/quiz`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              lessonText,
+              questionCount,
+              difficulty,
+              previousQuestions,
+            }),
+          }
+        );
+
+        result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.error || "Failed to generate quiz."
+          );
         }
-      );
 
-      const result = await response.json();
+        if (
+          !Array.isArray(result.questions) ||
+          result.questions.length !== questionCount
+        ) {
+          throw new Error(
+            "The quiz was incomplete. Please try again."
+          );
+        }
 
-      if (!response.ok) {
-        throw new Error(
-          result.error || "Failed to generate quiz."
-        );
-      }
+        if (!hasDuplicateQuestions(result.questions, previousQuestions)) {
+          break;
+        }
 
-      if (
-        !Array.isArray(result.questions) ||
-        result.questions.length !== questionCount
-      ) {
-        throw new Error(
-          "The quiz was incomplete. Please try again."
-        );
+        previousQuestions = [
+          ...previousQuestions,
+          ...result.questions.map((question) => question.question),
+        ].slice(-20);
+
+        if (attempt === 1) {
+          throw new Error(
+            "The generated quiz repeated a recent question. Please try again."
+          );
+        }
       }
 
       setQuizDifficulty(difficulty);
@@ -236,6 +303,7 @@ export default function AIQuiz({
       percentage: finalPercentage,
       xpEarned: score * POINTS_PER_QUESTION,
       maxXp: totalQuestions * POINTS_PER_QUESTION,
+      questions: questions.map((question) => question.question),
       answers: finalAnswers,
       completedAt: new Date().toISOString(),
     };
