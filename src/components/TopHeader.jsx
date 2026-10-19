@@ -82,6 +82,21 @@ function getLevelName(level) {
   return "Learning Champion";
 }
 
+function getNextMilestone(xp) {
+  const milestones = [
+    { xp: 250, label: "Achievement badge" },
+    { xp: 500, label: "Advanced progress insights" },
+    { xp: 1000, label: "Collaborative study room" },
+  ];
+
+  return (
+    milestones.find((milestone) => xp < milestone.xp) || {
+      xp: 2000,
+      label: "Study challenge customization",
+    }
+  );
+}
+
 export default function TopHeader() {
   const navigate = useNavigate();
 
@@ -255,6 +270,11 @@ export default function TopHeader() {
   const levelXp = totalXp % 100;
   const xpRemaining = 100 - levelXp;
   const progress = levelXp;
+  const nextMilestone = getNextMilestone(totalXp);
+  const milestoneRemaining = Math.max(
+    nextMilestone.xp - totalXp,
+    0
+  );
 
   // Always prioritize the authenticated account's name.
   const displayName = account?.name || profile.name;
@@ -441,6 +461,17 @@ export default function TopHeader() {
           <p>
             {xpRemaining} more XP to reach Level {level + 1}!
           </p>
+
+          <div className="lq-milestone-progress">
+            <span>
+              Next milestone: {nextMilestone.label}
+            </span>
+            <strong>
+              {milestoneRemaining > 0
+                ? `${milestoneRemaining} XP remaining`
+                : "Unlocked"}
+            </strong>
+          </div>
         </div>
       </div>
     </header>

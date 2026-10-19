@@ -315,6 +315,20 @@
   color: #9b8eb6;
 }
 
+.lq-milestone-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  color: #6657a8;
+  font-size: 12px;
+}
+
+.lq-milestone-progress strong {
+  color: #4f3caa;
+  white-space: nowrap;
+}
+
 /* RESPONSIVE */
 
 @media (max-width: 900px) {
@@ -357,6 +371,12 @@
 
   .lq-level-left {
     min-width: 0;
+  }
+
+  .lq-milestone-progress {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 
   .lq-profile-dropdown {
