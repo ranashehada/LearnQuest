@@ -292,6 +292,12 @@ a {
   line-height: 1.5;
 }
 
+.ai-saved-note {
+  margin: 10px 0 0;
+  color: #7c749a;
+  font-size: 12px;
+}
+
 @media (max-width: 480px) {
   .auth-card {
     padding: 24px;

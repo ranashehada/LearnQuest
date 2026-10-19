@@ -24,6 +24,38 @@ import {
 } from "../utils/lessonStorage";
 
 const API_URL = "http://localhost:5000";
+const AI_RESULTS_KEY = "learnquest-ai-results";
+
+function readSavedAIResults(lessonId) {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(AI_RESULTS_KEY) || "{}"
+    );
+
+    return saved?.[lessonId] || {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAIResult(lessonId, type, content) {
+  try {
+    const saved = JSON.parse(
+      localStorage.getItem(AI_RESULTS_KEY) || "{}"
+    );
+    const results = saved && typeof saved === "object" ? saved : {};
+
+    results[lessonId] = {
+      ...(results[lessonId] || {}),
+      [type]: content,
+      updatedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(AI_RESULTS_KEY, JSON.stringify(results));
+  } catch (error) {
+    console.error("Could not save AI result:", error);
+  }
+}
 
 function readSubjects(userId) {
   try {
@@ -125,6 +157,10 @@ export default function LessonDetails() {
       setChatError("");
       setChatRetryQuestion("");
       setActiveTab("explanation");
+
+      const savedAIResults = readSavedAIResults(lessonId);
+      setExplanation(savedAIResults.explanation || "");
+      setSummary(savedAIResults.summary || "");
 
       try {
         const user = await initializeLessonStorageUser();
@@ -292,6 +328,8 @@ export default function LessonDetails() {
       } else {
         setSummary(result.content || "");
       }
+
+      saveAIResult(lessonId, type, result.content || "");
     } catch (error) {
       setAiError(getAIErrorMessage(error, "AI generation failed. Please try again."));
       setAiRetryType(type);
@@ -557,6 +595,7 @@ export default function LessonDetails() {
             ) : (
               <>
                 <AIResult content={explanation} />
+                <p className="ai-saved-note">Saved for this lesson on this browser.</p>
                 <button
                   type="button"
                   className="btn-primary"
@@ -613,6 +652,7 @@ export default function LessonDetails() {
             ) : (
               <>
                 <AIResult content={summary} />
+                <p className="ai-saved-note">Saved for this lesson on this browser.</p>
                 <button
                   type="button"
                   className="btn-primary"
