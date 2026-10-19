@@ -1130,6 +1130,68 @@ a {
   cursor: pointer;
 }
 
+.subject-quiz-history {
+  margin-top: 22px;
+  padding: 22px;
+  border: 1px solid #eae7f3;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.subject-quiz-history-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 0;
+  border-top: 1px solid #f0edf7;
+}
+
+.subject-quiz-history-item strong {
+  color: #332b4b;
+  font-size: 13px;
+}
+
+.subject-quiz-history-item p {
+  margin: 5px 0 0;
+  color: #9e97ae;
+  font-size: 11px;
+}
+
+.subject-quiz-review-button {
+  padding: 7px 10px;
+  border: 1px solid #dcd5fa;
+  border-radius: 8px;
+  background: #faf9ff;
+  color: #604bc7;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.subject-quiz-review {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #faf9ff;
+}
+
+.subject-quiz-review div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #4d4866;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.subject-quiz-review span {
+  color: #807899;
+}
+
 /* LESSON STUDY WORKSPACE */
 
 .lesson-tabs {

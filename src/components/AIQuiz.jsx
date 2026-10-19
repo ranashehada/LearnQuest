@@ -15,6 +15,8 @@ import "./AIQuiz.css";
 const API_URL = "http://localhost:5000";
 const RESULTS_KEY = "learnquest-quiz-results";
 const SETTINGS_KEY = "learnquest-settings";
+const QUIZ_DRAFT_PREFIX = "learnquest-quiz-draft-";
+const MAX_SAVED_QUIZ_RESULTS = 50;
 const POINTS_PER_QUESTION = 10;
 
 const DEFAULT_SETTINGS = {
@@ -97,6 +99,10 @@ function hasDuplicateQuestions(questions, previousQuestions) {
   return false;
 }
 
+function getQuizDraftKey(lessonId) {
+  return `${QUIZ_DRAFT_PREFIX}${lessonId || "unknown"}`;
+}
+
 export default function AIQuiz({
   lessonText,
   lessonId,
@@ -162,6 +168,73 @@ export default function AIQuiz({
     };
   }, [questions.length, loading]);
 
+  // Preserve an unfinished quiz so an accidental refresh does not erase progress.
+  useEffect(() => {
+    const key = getQuizDraftKey(lessonId);
+
+    if (questions.length > 0 && !finished) {
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          questions,
+          quizDifficulty,
+          currentIndex,
+          selectedAnswer,
+          checked,
+          answers,
+          xp,
+        })
+      );
+      return;
+    }
+
+    if (finished) {
+      localStorage.removeItem(key);
+    }
+  }, [
+    lessonId,
+    questions,
+    quizDifficulty,
+    currentIndex,
+    selectedAnswer,
+    checked,
+    answers,
+    xp,
+    finished,
+  ]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(getQuizDraftKey(lessonId));
+
+    if (!saved) return;
+
+    const timeout = window.setTimeout(() => {
+      try {
+        const draft = JSON.parse(saved);
+
+        if (!Array.isArray(draft.questions) || draft.questions.length === 0) {
+          return;
+        }
+
+        if (window.confirm("You have an unfinished quiz. Would you like to resume it?")) {
+          setQuestions(draft.questions);
+          setQuizDifficulty(draft.quizDifficulty || "medium");
+          setCurrentIndex(Number(draft.currentIndex) || 0);
+          setSelectedAnswer(draft.selectedAnswer ?? null);
+          setChecked(Boolean(draft.checked));
+          setAnswers(Array.isArray(draft.answers) ? draft.answers : []);
+          setXp(Number(draft.xp) || 0);
+        } else {
+          localStorage.removeItem(getQuizDraftKey(lessonId));
+        }
+      } catch {
+        localStorage.removeItem(getQuizDraftKey(lessonId));
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [lessonId]);
+
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
 
@@ -180,6 +253,7 @@ export default function AIQuiz({
     if (!lessonText?.trim() || loading) return;
 
     setLoading(true);
+    localStorage.removeItem(getQuizDraftKey(lessonId));
     setError("");
     setSaveError("");
     setQuestions([]);
@@ -321,7 +395,15 @@ export default function AIQuiz({
 
       localStorage.setItem(
         RESULTS_KEY,
-        JSON.stringify([result, ...results])
+        JSON.stringify(
+          [result, ...results].map((savedResult, index) => {
+            if (index < MAX_SAVED_QUIZ_RESULTS) return savedResult;
+            const summary = { ...savedResult };
+            delete summary.questions;
+            delete summary.answers;
+            return summary;
+          })
+        )
       );
 
       window.dispatchEvent(
@@ -365,6 +447,8 @@ export default function AIQuiz({
 
   function resetQuiz() {
     const saved = readQuizSettings();
+
+    localStorage.removeItem(getQuizDraftKey(lessonId));
 
     setQuestionCount(saved.quizQuestionCount);
     setDifficulty(saved.quizDifficulty);

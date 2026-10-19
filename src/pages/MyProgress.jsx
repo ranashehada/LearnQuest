@@ -10,13 +10,11 @@ import {
   LockKeyhole,
   TrendingUp,
   Star,
-  CalendarDays,
 } from "lucide-react";
 import "./MyProgress.css";
 
 const RESULTS_KEY = "learnquest-quiz-results";
 const ACTIVITY_KEY = "learnquest-study-activity";
-const LESSONS_KEY = "learnquest-lessons";
 
 function readArray(key) {
   try {
@@ -82,23 +80,10 @@ function getLevelName(level) {
   return "Learning Champion";
 }
 
-function formatDate(value) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "Unknown date";
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 export default function MyProgress() {
   const [data, setData] = useState({
     results: [],
     activities: [],
-    lessons: [],
   });
 
   useEffect(() => {
@@ -106,7 +91,6 @@ export default function MyProgress() {
       setData({
         results: readArray(RESULTS_KEY),
         activities: readArray(ACTIVITY_KEY),
-        lessons: readArray(LESSONS_KEY),
       });
     }
 
@@ -129,7 +113,7 @@ export default function MyProgress() {
     };
   }, []);
 
-  const { results, activities, lessons } = data;
+  const { results, activities } = data;
 
   const totalXP = useMemo(
     () => results.reduce((sum, result) => sum + getXP(result), 0),
@@ -181,16 +165,6 @@ export default function MyProgress() {
   }, [results]);
 
   const maxXP = Math.max(10, ...weeklyXP.map((day) => day.xp));
-
-  const history = useMemo(
-    () =>
-      [...results].sort(
-        (a, b) =>
-          new Date(b.completedAt || 0) -
-          new Date(a.completedAt || 0)
-      ),
-    [results]
-  );
 
   const achievements = [
     {
@@ -425,76 +399,6 @@ export default function MyProgress() {
         </div>
       </section>
 
-      <section className="lq-progress-card">
-        <div className="lq-progress-card-heading">
-          <div>
-            <h2>
-              <CalendarDays size={20} />
-              Quiz History
-            </h2>
-            <p>Review your previous quiz performance</p>
-          </div>
-          <span className="lq-progress-tag">
-            {history.length} Results
-          </span>
-        </div>
-
-        {history.length === 0 ? (
-          <div className="lq-progress-empty">
-            <ClipboardCheck size={38} />
-            <h3>No quiz history yet</h3>
-            <p>
-              Complete your first quiz to see your
-              learning progress here.
-            </p>
-          </div>
-        ) : (
-          <div className="lq-progress-history">
-            {history.map((quiz, index) => {
-              const lesson = lessons.find(
-                (item) =>
-                  String(item.id) === String(quiz.lessonId)
-              );
-
-              const lessonTitle =
-                lesson?.title ||
-                lesson?.name ||
-                lesson?.fileName ||
-                `Practice Quiz ${index + 1}`;
-
-              const percentage =
-                Number(quiz.percentage) || 0;
-
-              return (
-                <div
-                  className="lq-progress-history-row"
-                  key={quiz.id || index}
-                >
-                  <div className="lq-progress-history-icon">
-                    <ClipboardCheck size={21} />
-                  </div>
-
-                  <div className="lq-progress-history-info">
-                    <strong>{lessonTitle}</strong>
-                    <span>
-                      {formatDate(quiz.completedAt)}
-                      {" · "}
-                      {quiz.difficulty || "medium"}
-                      {" · "}
-                      {quiz.questionCount || quiz.total || "—"} questions
-                    </span>
-                  </div>
-
-                  <div className="lq-progress-history-score">
-                    <strong>{percentage}%</strong>
-                    <span>+{getXP(quiz)} XP</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

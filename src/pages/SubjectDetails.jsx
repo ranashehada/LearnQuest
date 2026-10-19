@@ -9,11 +9,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  getLessons,
-  saveLessons,
-  deleteLessonFile,
-} from "../utils/lessonStorage";
 
 const API_URL = "http://localhost:5000";
 
@@ -42,6 +37,8 @@ export default function SubjectDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [quizHistory, setQuizHistory] = useState([]);
+  const [expandedQuizId, setExpandedQuizId] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -92,6 +89,13 @@ export default function SubjectDetails() {
         setUserId(currentUserId);
         setSubject(foundSubject || null);
         setLessons(userLessons);
+
+        const savedQuizzes = readArray("learnquest-quiz-results");
+        setQuizHistory(
+          savedQuizzes.filter(
+            (quiz) => String(quiz.subjectId) === String(id)
+          )
+        );
       } catch (err) {
         if (active) {
           setError(
@@ -290,6 +294,66 @@ export default function SubjectDetails() {
           </div>
         )}
       </section>
+
+      {quizHistory.length > 0 && (
+        <section className="subject-quiz-history">
+          <div className="subject-lessons-heading">
+            <h2>Quiz History for This Subject</h2>
+            <span>{quizHistory.length} results</span>
+          </div>
+
+          {quizHistory.map((quiz, index) => {
+            const quizId = quiz.id || index;
+            const hasReview =
+              Array.isArray(quiz.questions) &&
+              Array.isArray(quiz.answers);
+
+            return (
+              <article className="subject-quiz-history-item" key={quizId}>
+                <div>
+                  <strong>{quiz.percentage || 0}% score</strong>
+                  <p>
+                    {quiz.questionCount || "—"} questions · {quiz.difficulty || "medium"}
+                  </p>
+                </div>
+
+                {hasReview && (
+                  <button
+                    type="button"
+                    className="subject-quiz-review-button"
+                    onClick={() =>
+                      setExpandedQuizId((current) =>
+                        current === quizId ? null : quizId
+                      )
+                    }
+                    aria-expanded={expandedQuizId === quizId}
+                  >
+                    {expandedQuizId === quizId ? "Hide review" : "Review answers"}
+                  </button>
+                )}
+
+                {expandedQuizId === quizId && hasReview && (
+                  <div className="subject-quiz-review">
+                    {quiz.questions.map((question, questionIndex) => {
+                      const answer = quiz.answers[questionIndex];
+                      return (
+                        <div key={`${quizId}-${questionIndex}`}>
+                          <strong>{questionIndex + 1}. {question}</strong>
+                          <span>
+                            Your answer: {answer?.selectedAnswer == null ? "Not answered" : String.fromCharCode(65 + answer.selectedAnswer)}
+                            {" · "}
+                            Correct answer: {answer?.correctAnswer == null ? "—" : String.fromCharCode(65 + answer.correctAnswer)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </section>
+      )}
     </div>
   );
 }
