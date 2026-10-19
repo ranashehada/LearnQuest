@@ -51,6 +51,16 @@ function AIResult({ content }) {
   );
 }
 
+function getAIErrorMessage(error, fallback) {
+  if (!error) return fallback;
+
+  if (error.name === "TypeError") {
+    return "LearnQuest could not reach the AI service. Make sure the backend is running, then try again.";
+  }
+
+  return error.message || fallback;
+}
+
 export default function LessonDetails() {
   const { id, lessonId } = useParams();
 
@@ -73,11 +83,13 @@ export default function LessonDetails() {
   const [summary, setSummary] = useState("");
   const [aiLoading, setAiLoading] = useState("");
   const [aiError, setAiError] = useState("");
+  const [aiRetryType, setAiRetryType] = useState("");
 
   const [chatQuestion, setChatQuestion] = useState("");
   const [chatMessages, setChatMessages] = useState([]);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState("");
+  const [chatRetryQuestion, setChatRetryQuestion] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -98,9 +110,11 @@ export default function LessonDetails() {
       setSummary("");
       setAiLoading("");
       setAiError("");
+      setAiRetryType("");
       setChatMessages([]);
       setChatQuestion("");
       setChatError("");
+      setChatRetryQuestion("");
       setActiveTab("explanation");
 
       try {
@@ -238,6 +252,7 @@ export default function LessonDetails() {
 
     setAiLoading(type);
     setAiError("");
+    setAiRetryType("");
 
     try {
       const response = await fetch(
@@ -269,16 +284,15 @@ export default function LessonDetails() {
         setSummary(result.content || "");
       }
     } catch (error) {
-      setAiError(
-        error.message || "Something went wrong."
-      );
+      setAiError(getAIErrorMessage(error, "AI generation failed. Please try again."));
+      setAiRetryType(type);
     } finally {
       setAiLoading("");
     }
   }
 
-  async function sendChatMessage() {
-    const question = chatQuestion.trim();
+  async function sendChatMessage(questionOverride = "") {
+    const question = (questionOverride || chatQuestion).trim();
 
     if (
       !question ||
@@ -291,6 +305,7 @@ export default function LessonDetails() {
 
     setChatQuestion("");
     setChatError("");
+    setChatRetryQuestion("");
     setChatLoading(true);
 
     setChatMessages((previous) => [
@@ -330,9 +345,8 @@ export default function LessonDetails() {
         },
       ]);
     } catch (error) {
-      setChatError(
-        error.message || "Something went wrong."
-      );
+      setChatError(getAIErrorMessage(error, "The AI could not answer your question. Please try again."));
+      setChatRetryQuestion(question);
     } finally {
       setChatLoading(false);
     }
@@ -661,9 +675,19 @@ export default function LessonDetails() {
             </div>
 
             {chatError && (
-              <p className="form-error" role="alert">
-                {chatError}
-              </p>
+              <div className="ai-error-box" role="alert">
+                <p className="form-error">{chatError}</p>
+                {chatRetryQuestion && (
+                  <button
+                    type="button"
+                    className="ai-retry-button"
+                    onClick={() => sendChatMessage(chatRetryQuestion)}
+                    disabled={chatLoading}
+                  >
+                    Try Again
+                  </button>
+                )}
+              </div>
             )}
 
             <form
@@ -712,13 +736,23 @@ export default function LessonDetails() {
         {aiError &&
           (activeTab === "explanation" ||
             activeTab === "summary") && (
-            <p
-              className="form-error"
+            <div
+              className="form-error ai-error-box"
               role="alert"
               style={{ marginTop: "16px" }}
             >
-              {aiError}
-            </p>
+              <span>{aiError}</span>
+              {aiRetryType && (
+                <button
+                  type="button"
+                  className="ai-retry-button"
+                  onClick={() => generateAI(aiRetryType)}
+                  disabled={Boolean(aiLoading)}
+                >
+                  Try Again
+                </button>
+              )}
+            </div>
           )}
       </section>
 
