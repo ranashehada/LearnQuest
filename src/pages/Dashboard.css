@@ -54,6 +54,95 @@
   white-space: nowrap;
 }
 
+.lq-dashboard-actions {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.8fr) 2fr;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 22px;
+  border: 1px solid #e2dcfa;
+  border-radius: 19px;
+  background: linear-gradient(120deg, #f8f5ff, #ffffff);
+}
+
+.lq-dashboard-actions-intro h2 {
+  margin: 0 0 7px;
+  color: #292340;
+  font-size: 20px;
+}
+
+.lq-dashboard-actions-intro p {
+  margin: 0;
+  color: #8d87a2;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lq-dashboard-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.lq-dashboard-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 72px;
+  padding: 14px;
+  border: 1px solid #e8e4f5;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #6554bf;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.lq-dashboard-action:hover {
+  border-color: #a99bf2;
+  background: #faf9ff;
+  transform: translateY(-1px);
+}
+
+.lq-dashboard-action.primary {
+  border-color: #7258d5;
+  background: #7258d5;
+  color: #ffffff;
+}
+
+.lq-dashboard-action.primary:hover {
+  background: #6048c2;
+}
+
+.lq-dashboard-action span {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lq-dashboard-action strong {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.lq-dashboard-action small {
+  color: #9189aa;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.lq-dashboard-action.primary small {
+  color: #e4ddff;
+}
+
+.lq-dashboard-action:focus-visible {
+  outline: 3px solid #2d6cdf;
+  outline-offset: 3px;
+}
+
 /* STATS */
 
 .lq-dashboard-stats {
@@ -414,6 +503,10 @@ a.lq-lesson-preview:hover {
   .lq-dashboard-two-columns {
     grid-template-columns: 1fr;
   }
+
+  .lq-dashboard-actions {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 650px) {
@@ -444,5 +537,9 @@ a.lq-lesson-preview:hover {
 
   .lq-dashboard-level-chip {
     padding: 9px 12px;
+  }
+
+  .lq-dashboard-action-grid {
+    grid-template-columns: 1fr;
   }
 }

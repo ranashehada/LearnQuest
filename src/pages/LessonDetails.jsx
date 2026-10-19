@@ -51,6 +51,15 @@ function AIResult({ content }) {
   );
 }
 
+function AITransparencyNotice() {
+  return (
+    <p className="ai-transparency-notice" role="note">
+      Based on your uploaded lesson. AI responses may contain mistakes, so
+      verify important information with your study material.
+    </p>
+  );
+}
+
 function getAIErrorMessage(error, fallback) {
   if (!error) return fallback;
 
@@ -520,6 +529,7 @@ export default function LessonDetails() {
               Understand your lesson with clear,
               step-by-step AI explanations.
             </p>
+            <AITransparencyNotice />
 
             {!explanation ? (
               <div className="study-feature-placeholder">
@@ -577,6 +587,7 @@ export default function LessonDetails() {
               Review the most important concepts and
               key takeaways from your lesson.
             </p>
+            <AITransparencyNotice />
 
             {!summary ? (
               <div className="study-feature-placeholder">
@@ -627,6 +638,7 @@ export default function LessonDetails() {
             </div>
 
             <p>Ask questions about your uploaded lesson.</p>
+            <AITransparencyNotice />
 
             <div className="study-chat-box">
               {chatMessages.length === 0 && (

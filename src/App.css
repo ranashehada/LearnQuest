@@ -281,6 +281,17 @@ a {
   opacity: 0.6;
 }
 
+.ai-transparency-notice {
+  margin: 14px 0 18px;
+  padding: 10px 12px;
+  border-left: 4px solid #8b78df;
+  border-radius: 8px;
+  background: #f7f5ff;
+  color: #5c5480;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 @media (max-width: 480px) {
   .auth-card {
     padding: 24px;

@@ -382,6 +382,44 @@ export default function Dashboard() {
         </div>
       </section>
 
+      {/* PRIMARY STUDY ACTIONS */}
+      <section className="lq-dashboard-actions" aria-label="Primary study actions">
+        <div className="lq-dashboard-actions-intro">
+          <span className="lq-dashboard-eyebrow">START HERE</span>
+          <h2>What do you want to do?</h2>
+          <p>Reach your subjects and study tools without searching.</p>
+        </div>
+
+        <div className="lq-dashboard-action-grid">
+          <Link to="/subjects" className="lq-dashboard-action primary">
+            <Plus size={22} />
+            <span>
+              <strong>Create or open a subject</strong>
+              <small>Organize your lessons</small>
+            </span>
+            <ArrowRight size={17} />
+          </Link>
+
+          <Link to="/study-planner" className="lq-dashboard-action">
+            <ClipboardCheck size={22} />
+            <span>
+              <strong>Plan your next study task</strong>
+              <small>Keep your work organized</small>
+            </span>
+            <ArrowRight size={17} />
+          </Link>
+
+          <Link to="/my-progress" className="lq-dashboard-action">
+            <Target size={22} />
+            <span>
+              <strong>Review your progress</strong>
+              <small>See quiz scores and XP</small>
+            </span>
+            <ArrowRight size={17} />
+          </Link>
+        </div>
+      </section>
+
       <FocusTimer />
 
       {/* DASHBOARD STATISTICS */}
