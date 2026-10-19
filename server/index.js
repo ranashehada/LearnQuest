@@ -530,6 +530,7 @@ ${difficultyInstructions[difficulty]}
 Requirements:
 - Each question has exactly four answer options.
 - Each question has exactly one correct answer.
+- Include one short hint for each question. The hint should guide reasoning without revealing the answer.
 - Include a short explanation for the correct answer.
 - Avoid duplicate questions.
 - Do not repeat or closely rephrase any question in RECENT QUESTIONS TO AVOID.
@@ -550,6 +551,7 @@ Return only valid JSON with this structure:
         "Option D"
       ],
       "correctAnswer": 0,
+      "hint": "A short clue that helps the student reason without revealing the answer.",
       "explanation": "Explanation text"
     }
   ]
@@ -588,6 +590,8 @@ correctAnswer must be an integer from 0 to 3.
           Number.isInteger(item.correctAnswer) &&
           item.correctAnswer >= 0 &&
           item.correctAnswer <= 3 &&
+          typeof item.hint === "string" &&
+          item.hint.trim() &&
           typeof item.explanation === "string" &&
           item.explanation.trim()
       );

@@ -122,6 +122,7 @@ export default function AIQuiz({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [checked, setChecked] = useState(false);
+  const [showHint, setShowHint] = useState(false);
 
   const [answers, setAnswers] = useState([]);
   const [xp, setXp] = useState(0);
@@ -185,6 +186,7 @@ export default function AIQuiz({
     setCurrentIndex(0);
     setSelectedAnswer(null);
     setChecked(false);
+    setShowHint(false);
     setAnswers([]);
     setXp(0);
     setFinished(false);
@@ -340,6 +342,7 @@ export default function AIQuiz({
       setCurrentIndex((previous) => previous + 1);
       setSelectedAnswer(null);
       setChecked(false);
+      setShowHint(false);
       return;
     }
 
@@ -372,6 +375,7 @@ export default function AIQuiz({
     setCurrentIndex(0);
     setSelectedAnswer(null);
     setChecked(false);
+    setShowHint(false);
     setXp(0);
     setFinished(false);
     setReviewMode(false);
@@ -513,6 +517,26 @@ export default function AIQuiz({
 
               <h3>{currentQuestion.question}</h3>
 
+              {!checked && (
+                <div className="lq-quiz-hint">
+                  <button
+                    type="button"
+                    className="ai-quiz-hint-button"
+                    onClick={() => setShowHint((previous) => !previous)}
+                    aria-expanded={showHint}
+                  >
+                    {showHint ? "Hide Hint" : "Show Hint"}
+                  </button>
+
+                  {showHint && (
+                    <p className="ai-quiz-hint-text" role="note">
+                      <strong>Hint:</strong>{" "}
+                      {currentQuestion.hint}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="ai-quiz-options">
                 {currentQuestion.options.map(
                   (option, optionIndex) => {
@@ -544,6 +568,15 @@ export default function AIQuiz({
                         className={optionClass}
                         disabled={checked}
                         aria-pressed={selected}
+                        aria-label={`${option}${
+                          checked && correct
+                            ? ", correct answer"
+                            : checked && selected && !correct
+                            ? ", your incorrect answer"
+                            : selected
+                            ? ", selected"
+                            : ""
+                        }`}
                         onClick={() =>
                           setSelectedAnswer(optionIndex)
                         }
@@ -557,13 +590,23 @@ export default function AIQuiz({
                         <span>{option}</span>
 
                         {checked && correct && (
-                          <CheckCircle2 size={20} />
+                          <>
+                            <span className="ai-quiz-answer-label">
+                              Correct answer
+                            </span>
+                            <CheckCircle2 size={20} aria-hidden="true" />
+                          </>
                         )}
 
                         {checked &&
                           selected &&
                           !correct && (
-                            <XCircle size={20} />
+                            <>
+                              <span className="ai-quiz-answer-label">
+                                Your answer
+                              </span>
+                              <XCircle size={20} aria-hidden="true" />
+                            </>
                           )}
                       </button>
                     );
@@ -573,7 +616,11 @@ export default function AIQuiz({
 
               {/* ANSWER FEEDBACK */}
               {checked && (
-                <div className="lq-answer-feedback">
+                <div
+                  className="lq-answer-feedback"
+                  role="status"
+                  aria-live="polite"
+                >
                   <div
                     className={
                       isCorrect

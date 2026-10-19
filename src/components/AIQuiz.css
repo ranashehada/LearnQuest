@@ -167,6 +167,41 @@
   margin: 0 0 22px;
 }
 
+.lq-quiz-hint {
+  margin: -8px 0 20px;
+}
+
+.ai-quiz-hint-button {
+  padding: 8px 12px;
+  border: 1px solid #dcd5fa;
+  border-radius: 9px;
+  background: #faf9ff;
+  color: #604bc7;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ai-quiz-hint-button:hover {
+  background: #f0ecff;
+}
+
+.ai-quiz-hint-button:focus-visible {
+  outline: 3px solid #2d6cdf;
+  outline-offset: 3px;
+}
+
+.ai-quiz-hint-text {
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-left: 4px solid #e2b84b;
+  border-radius: 8px;
+  background: #fff9e8;
+  color: #6f5a1b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .ai-quiz-options {
   display: flex;
   flex-direction: column;
@@ -193,6 +228,14 @@
 .ai-quiz-option:hover:not(:disabled) {
   border-color: #a99bf2;
   background: #faf9ff;
+}
+
+.ai-quiz-option:focus-visible,
+.ai-quiz-primary:focus-visible,
+.ai-quiz-secondary:focus-visible,
+.ai-retry-button:focus-visible {
+  outline: 3px solid #2d6cdf;
+  outline-offset: 3px;
 }
 
 .ai-quiz-option.selected {
@@ -239,6 +282,14 @@
 
 .ai-quiz-option:disabled {
   cursor: default;
+}
+
+.ai-quiz-answer-label {
+  margin-left: auto;
+  color: #34324f;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .ai-quiz-correct-icon,
@@ -337,6 +388,16 @@
 @keyframes ai-quiz-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-quiz-spin,
+  .ai-quiz-progress-fill,
+  .ai-quiz-primary,
+  .ai-quiz-option {
+    animation: none;
+    transition: none;
   }
 }
 
@@ -546,6 +607,11 @@
 @media (max-width: 600px) {
   .lq-game-actions .ai-quiz-primary {
     width: 100%;
+  }
+
+  .ai-quiz-answer-label {
+    white-space: normal;
+    text-align: right;
   }
 
   .lq-review-toggle {
