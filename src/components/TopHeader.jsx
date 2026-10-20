@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Flame,
@@ -11,8 +11,10 @@ import {
   Star,
   ArrowRight,
   LogOut,
+  X,
 } from "lucide-react";
 import { API_URL } from "../utils/api";
+import { getNewLevel } from "../utils/levelProgress";
 import "./TopHeader.css";
 
 
@@ -106,10 +108,18 @@ export default function TopHeader() {
   });
 
   const [totalXp, setTotalXp] = useState(0);
+  const previousXp = useRef(null);
+  const [celebratingLevel, setCelebratingLevel] = useState(null);
   const [streak, setStreak] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+
+  useEffect(() => {
+    if (celebratingLevel === null) return undefined;
+    const timer = window.setTimeout(() => setCelebratingLevel(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [celebratingLevel]);
 
   // Get the real account name and email.
   useEffect(() => {
@@ -176,7 +186,7 @@ export default function TopHeader() {
 
   // Keep the existing profile photo and statistics.
   useEffect(() => {
-    function updateStats() {
+    function updateStats(event) {
       const savedProfile = readJSON(PROFILE_KEY, {});
       const quizResults = readJSON(RESULTS_KEY, []);
       const studyActivity = readJSON(ACTIVITY_KEY, []);
@@ -216,7 +226,13 @@ export default function TopHeader() {
         tasks.filter((task) => task.xpAwarded === true)
           .length * POINTS_PER_TASK;
 
-      setTotalXp(quizXp + taskXp);
+      const nextXp = quizXp + taskXp;
+      if (event?.type === "learnquest:stats-updated") {
+        const newLevel = getNewLevel(previousXp.current, nextXp);
+        if (newLevel !== null) setCelebratingLevel(newLevel);
+      }
+      previousXp.current = nextXp;
+      setTotalXp(nextXp);
 
       const activities = Array.isArray(studyActivity)
         ? studyActivity
@@ -309,6 +325,23 @@ export default function TopHeader() {
 
   return (
     <header className="lq-gamified-header">
+      {celebratingLevel !== null && (
+        <div className="lq-level-celebration" role="status" aria-live="polite">
+          <span className="lq-level-celebration-art" aria-hidden="true">
+            <Star size={30} fill="currentColor" />
+            <span className="lq-level-spark lq-level-spark-one" />
+            <span className="lq-level-spark lq-level-spark-two" />
+            <span className="lq-level-spark lq-level-spark-three" />
+          </span>
+          <span className="lq-level-celebration-copy">
+            <strong>Level {celebratingLevel} unlocked!</strong>
+            <span>{getLevelName(celebratingLevel)} · {totalXp} total XP earned</span>
+          </span>
+          <button type="button" aria-label="Dismiss level-up message" onClick={() => setCelebratingLevel(null)}>
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+      )}
       <div className="lq-gamified-main">
         {/* WELCOME MESSAGE */}
         <div className="lq-gamified-welcome">
@@ -487,7 +520,7 @@ export default function TopHeader() {
 
         <div className="lq-level-progress-area">
           <div className="lq-level-progress-info">
-            <span>Level Progress</span>
+            <span>XP toward Level {level + 1}</span>
             <strong>{levelXp} / 100 XP</strong>
           </div>
 
@@ -506,7 +539,7 @@ export default function TopHeader() {
           </div>
 
           <p>
-            {xpRemaining} more XP to reach Level {level + 1}!
+            {totalXp} total XP earned · {xpRemaining} more XP to reach Level {level + 1}
           </p>
 
           <div className="lq-milestone-progress">

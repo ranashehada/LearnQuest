@@ -43,6 +43,17 @@ html[data-lq-theme="dark"] .subject-icon-option:has(input:checked) {
   border-color: #aa97ff;
 }
 
+html[data-lq-theme="dark"] .lq-level-celebration {
+  background: #322a3c;
+  border-color: #ad8846;
+  color: #fff4d9;
+}
+
+html[data-lq-theme="dark"] .lq-level-celebration-art {
+  background: #514023;
+  color: #ffd98d;
+}
+
 html[data-lq-theme="dark"] .lq-dashboard-welcome,
 html[data-lq-theme="dark"] .lq-progress-hero,
 html[data-lq-theme="dark"] .lq-profile-heading,
