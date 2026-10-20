@@ -37,6 +37,29 @@
   background: #faf9ff;
 }
 
+.ai-quiz-resume {
+  padding: 24px;
+  margin-bottom: 20px;
+  border: 1px solid #dcd5fa;
+  border-radius: 16px;
+  background: #faf9ff;
+}
+
+.ai-quiz-resume h3 {
+  margin: 0 0 8px;
+}
+
+.ai-quiz-resume p {
+  margin: 0 0 18px;
+  line-height: 1.6;
+}
+
+.ai-quiz-resume-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 .ai-quiz-start-icon {
   width: 65px;
   height: 65px;
