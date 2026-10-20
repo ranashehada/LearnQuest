@@ -204,6 +204,7 @@
   font-size: 33px;
   font-weight: 850;
   color: #28213f;
+  font-variant-numeric: tabular-nums;
 }
 
 .lq-dashboard-stat small {

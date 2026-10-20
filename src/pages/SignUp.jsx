@@ -111,6 +111,8 @@ export default function SignUp() {
               type={showPassword ? "text" : "password"}
               placeholder="Create a password"
               autoComplete="new-password"
+              aria-describedby="passwordHint"
+              aria-invalid={Boolean(error)}
               minLength={8}
               maxLength={72}
               required
@@ -130,6 +132,9 @@ export default function SignUp() {
               )}
             </button>
           </div>
+          <p id="passwordHint" className="field-hint">
+            Use 8 to 72 characters.
+          </p>
 
           <label htmlFor="confirmPassword">
             Confirm Password

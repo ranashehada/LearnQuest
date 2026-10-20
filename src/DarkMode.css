@@ -232,8 +232,20 @@ html[data-lq-theme="dark"] .confirm-delete-dialog .btn-primary {
   color: #ffffff;
 }
 
+html[data-lq-theme="dark"] .form-error,
 html[data-lq-theme="dark"] .confirm-delete-dialog .form-error {
-  color: #ffb4b4;
+  background: #492832;
+  border-color: #7f3344;
+  color: #ffc5cf;
+}
+
+html[data-lq-theme="dark"] .ai-error-box .form-error {
+  background: transparent;
+  border: 0;
+}
+
+html[data-lq-theme="dark"] .field-hint {
+  color: #b8afcd;
 }
 
 /* =========================================================

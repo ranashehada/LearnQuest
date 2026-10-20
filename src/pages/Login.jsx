@@ -76,8 +76,9 @@ export default function Login() {
             id="loginEmail"
             name="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder="name@university.edu"
             autoComplete="email"
+            aria-invalid={Boolean(error)}
             required
           />
 
@@ -90,6 +91,7 @@ export default function Login() {
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
               autoComplete="current-password"
+              aria-invalid={Boolean(error)}
               required
             />
 

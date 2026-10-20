@@ -5,13 +5,36 @@
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", system-ui, Arial, sans-serif;
   background: #f7f8fc;
   color: #1e2440;
+  line-height: 1.5;
 }
 
 a {
   text-decoration: none;
+}
+
+button,
+.btn-primary,
+.btn-outline {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled,
+.btn-primary:disabled,
+.btn-outline:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.btn-primary:active:not(:disabled),
+.btn-outline:active {
+  transform: translateY(1px);
 }
 
 .welcome {
@@ -105,6 +128,11 @@ a {
   padding: 30px;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.feature-card h3 {
+  margin: 14px 0 8px;
 }
 
 .feature-card svg {
@@ -243,11 +271,26 @@ a {
 .auth-footer a {
   color: #5545b9;
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.field-hint {
+  margin: -4px 0 0;
+  color: #5b556f;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .form-error {
-  color: #b91c1c;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #9f1239;
   font-size: 14px;
+  font-weight: 650;
 }
 
 .ai-error-box {
@@ -1628,6 +1671,46 @@ a {
   gap: 7px;
   color: #5545b9;
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.subject-form-card form > label,
+.lesson-form-section > label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.lq-dashboard-stat strong,
+.lq-progress-stat strong,
+.lq-game-badge span,
+.subject-quiz-history-item strong,
+.lq-xp-chart-value {
+  font-variant-numeric: tabular-nums;
+}
+
+input:user-invalid,
+textarea:user-invalid {
+  border-color: #e11d48;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .btn-primary:active:not(:disabled),
+  .btn-outline:active {
+    transform: none;
+  }
 }
 
 /* Mobile */

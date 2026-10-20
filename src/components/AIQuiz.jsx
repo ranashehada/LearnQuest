@@ -573,6 +573,11 @@ export default function AIQuiz({
             type="button"
             className="ai-quiz-primary"
             disabled={!lessonText?.trim()}
+            title={
+              lessonText?.trim()
+                ? "Generate a quiz from this lesson"
+                : "Wait until the lesson text is ready"
+            }
             onClick={generateQuiz}
           >
             <Sparkles size={18} />

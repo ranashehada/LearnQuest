@@ -17,7 +17,7 @@ export default function Welcome() {
       </header>
 
       <main className="welcome-main">
-        <div className="hero-icon">
+        <div className="hero-icon" aria-hidden="true">
           <GraduationCap size={45} />
         </div>
 
@@ -32,25 +32,25 @@ export default function Welcome() {
           Get Started →
         </Link>
 
-        <div className="features">
+        <section className="features" aria-label="What LearnQuest helps you do">
           <div className="feature-card">
-            <BookOpen size={30} />
+            <BookOpen size={30} aria-hidden="true" />
             <h3>Organize Lessons</h3>
             <p>Keep your subjects and lessons in one place.</p>
           </div>
 
           <div className="feature-card">
-            <Sparkles size={30} />
+            <Sparkles size={30} aria-hidden="true" />
             <h3>Learn with AI</h3>
             <p>Understand complex topics with AI explanations.</p>
           </div>
 
           <div className="feature-card">
-            <Trophy size={30} />
+            <Trophy size={30} aria-hidden="true" />
             <h3>Track Progress</h3>
             <p>Complete quizzes and earn achievements.</p>
           </div>
-        </div>
+        </section>
       </main>
     </div>
   );
