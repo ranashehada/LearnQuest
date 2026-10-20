@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { API_URL } from "../utils/api";
 import { deleteLessonFiles, setLessonStorageUser } from "../utils/lessonStorage";
-import { commitSubjectDeletion, prepareSubjectDeletion } from "../utils/subjectDeletion";
+import { commitStudyDeletion, prepareSubjectDeletion } from "../utils/subjectDeletion";
 
 
 function getSubjectsKey(userId) {
@@ -198,7 +198,7 @@ export default function MySubjects() {
       }
 
       setLessonStorageUser(userId);
-      await commitSubjectDeletion(localStorage, prepared, deleteLessonFiles);
+      await commitStudyDeletion(localStorage, prepared, deleteLessonFiles);
       setSubjects(JSON.parse(prepared.changes.get(getSubjectsKey(userId))));
       if (editingId === subject.id) setShowForm(false);
       setDeletionNotice(`"${subject.name}" and its ${count} ${count === 1 ? "lesson" : "lessons"} were deleted. Earned XP was kept.`);

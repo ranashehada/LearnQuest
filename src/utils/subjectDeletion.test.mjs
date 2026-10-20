@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { commitSubjectDeletion, prepareSubjectDeletion } from "./subjectDeletion.js";
+import { commitStudyDeletion, prepareSubjectDeletion, prepareLessonDeletion } from "./subjectDeletion.js";
 
 function memoryStorage(seed) {
   const data = new Map(Object.entries(seed));
@@ -46,7 +46,7 @@ test("deletes only the selected subject's uploads and details, retaining XP and 
   assert.deepEqual(prepared.lessonIds, ["l1"]);
   assert.equal(prepared.reviewCount, 1);
   let deletedIds;
-  await commitSubjectDeletion(storage, prepared, async (ids) => { deletedIds = ids; });
+  await commitStudyDeletion(storage, prepared, async (ids) => { deletedIds = ids; });
   assert.deepEqual(deletedIds, ["l1"]);
   assert.deepEqual(JSON.parse(storage.getItem("learnquest-user-u1-subjects")).map((s) => s.id), ["s2"]);
   assert.deepEqual(JSON.parse(storage.getItem("learnquest-user-u1-lessons")).map((l) => l.id), ["l2"]);
@@ -70,7 +70,7 @@ test("failed file deletion restores every browser record", async () => {
   const before = storage.snapshot();
   const prepared = prepareSubjectDeletion(storage, "u1", "s1");
   await assert.rejects(
-    commitSubjectDeletion(storage, prepared, async () => { throw new Error("disk error"); }),
+    commitStudyDeletion(storage, prepared, async () => { throw new Error("disk error"); }),
     /Nothing was deleted/,
   );
   assert.deepEqual(storage.snapshot(), before);
@@ -82,9 +82,41 @@ test("stale or damaged data stops deletion before files are touched", async () =
   storage.setItem("learnquest-user-u1-lessons", "changed in another tab");
   let fileDeleteCalled = false;
   await assert.rejects(
-    commitSubjectDeletion(storage, prepared, async () => { fileDeleteCalled = true; }),
+    commitStudyDeletion(storage, prepared, async () => { fileDeleteCalled = true; }),
     /Study data changed/,
   );
   assert.equal(fileDeleteCalled, false);
   assert.throws(() => prepareSubjectDeletion(storage, "u1", "s1"), /Lessons could not be read/);
+});
+
+test("lesson deletion keeps the subject, XP, and study session but removes file references", async () => {
+  const storage = fixture();
+  const prepared = prepareLessonDeletion(storage, "u1", "s1", "l1");
+  let deletedIds;
+  await commitStudyDeletion(storage, prepared, async (ids) => { deletedIds = ids; });
+  assert.deepEqual(deletedIds, ["l1"]);
+  assert.equal(JSON.parse(storage.getItem("learnquest-user-u1-subjects")).length, 2);
+  assert.deepEqual(JSON.parse(storage.getItem("learnquest-user-u1-lessons")).map((lesson) => lesson.id), ["l2"]);
+  const results = JSON.parse(storage.getItem("learnquest-quiz-results"));
+  assert.equal(results[0].xpEarned, 40);
+  assert.equal(results[0].subjectId, "s1");
+  assert.equal(results[0].questions, undefined);
+  assert.deepEqual(results[1].questions, ["Other"]);
+  assert.deepEqual(JSON.parse(storage.getItem("learnquest-ai-results")), { l2: { summary: "Math" } });
+  const plan = JSON.parse(storage.getItem("learnquest-user-u1-planner-v1"));
+  assert.equal(plan.sessions[0].subjectId, "s1");
+  assert.equal(plan.sessions[0].lessonId, "");
+  assert.equal(plan.sessions[0].activity, "study");
+  assert.equal(storage.getItem("learnquest-quiz-draft-l1"), null);
+});
+
+test("failed lesson file deletion rolls back all related records", async () => {
+  const storage = fixture();
+  const before = storage.snapshot();
+  const prepared = prepareLessonDeletion(storage, "u1", "s1", "l1");
+  await assert.rejects(
+    commitStudyDeletion(storage, prepared, async () => { throw new Error("disk error"); }),
+    /Nothing was deleted/,
+  );
+  assert.deepEqual(storage.snapshot(), before);
 });

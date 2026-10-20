@@ -114,7 +114,78 @@ export function prepareSubjectDeletion(storage, userId, subjectId) {
   return { subject, lessonIds, reviewCount, original, changes };
 }
 
-export async function commitSubjectDeletion(storage, prepared, deleteFiles) {
+export function prepareLessonDeletion(storage, userId, subjectId, lessonId) {
+  const id = String(lessonId);
+  const subject = String(subjectId);
+  const prefix = `learnquest-user-${userId}-`;
+  const keys = {
+    subjects: `${prefix}subjects`,
+    lessons: `${prefix}lessons`,
+    results: "learnquest-quiz-results",
+    ai: "learnquest-ai-results",
+    plan: plannerKey(userId),
+    lastOpened: `${prefix}last-opened-lesson`,
+    draft: `learnquest-quiz-draft-${id}`,
+  };
+  const original = new Map();
+  const read = (key) => {
+    const raw = storage.getItem(key);
+    original.set(key, raw);
+    return raw;
+  };
+
+  const subjects = readArray(read(keys.subjects), "Subjects");
+  if (!subjects.some((item) => String(item.id) === subject)) {
+    throw new Error("Subject not found. Refresh and try again.");
+  }
+  const lessons = readArray(read(keys.lessons), "Lessons");
+  const lesson = lessons.find((item) => String(item.id) === id);
+  if (!lesson || String(lesson.subjectId ?? lesson.subject_id) !== subject) {
+    throw new Error("Lesson not found in this subject. Refresh and try again.");
+  }
+  const results = readArray(read(keys.results), "Quiz history");
+  const aiResults = readObject(read(keys.ai), "Saved AI explanations");
+  const planRaw = read(keys.plan);
+  const plan = parsePlan(planRaw);
+  const lastOpenedRaw = read(keys.lastOpened);
+  const lastOpened = lastOpenedRaw == null ? null : readObject(lastOpenedRaw, "Recent lesson");
+  const draftRaw = read(keys.draft);
+
+  const changes = new Map();
+  changes.set(keys.lessons, JSON.stringify(lessons.filter((item) => String(item.id) !== id)));
+  const keptResults = results.map((result) => {
+    if (String(result.lessonId) !== id) return result;
+    const summary = { ...result };
+    delete summary.lessonId;
+    delete summary.questions;
+    delete summary.answers;
+    return summary;
+  });
+  if (keptResults.some((result, index) => result !== results[index])) {
+    changes.set(keys.results, JSON.stringify(keptResults));
+  }
+  if (Object.hasOwn(aiResults, id)) {
+    const keptAI = { ...aiResults };
+    delete keptAI[id];
+    changes.set(keys.ai, JSON.stringify(keptAI));
+  }
+  if (planRaw != null) {
+    const sessions = plan.sessions.map((session) =>
+      String(session.lessonId) === id
+        ? { ...session, lessonId: "", activity: "study" }
+        : session,
+    );
+    if (sessions.some((session, index) => session !== plan.sessions[index])) {
+      changes.set(keys.plan, JSON.stringify({ ...plan, sessions }));
+    }
+  }
+  if (lastOpened && String(lastOpened.lessonId) === id) changes.set(keys.lastOpened, null);
+  if (draftRaw != null) changes.set(keys.draft, null);
+
+  return { lesson, lessonIds: [id], original, changes };
+}
+
+export async function commitStudyDeletion(storage, prepared, deleteFiles) {
   const { original, changes, lessonIds } = prepared;
   for (const [key, raw] of original) {
     if (storage.getItem(key) !== raw) {

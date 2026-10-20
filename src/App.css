@@ -643,6 +643,44 @@ a {
   cursor: pointer;
 }
 
+.lesson-delete-dialog {
+  width: min(100% - 32px, 520px);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 28px;
+  color: #20233d;
+  box-shadow: 0 24px 60px rgba(32, 35, 61, 0.2);
+}
+
+.lesson-delete-dialog::backdrop {
+  background: rgba(25, 28, 48, 0.55);
+}
+
+.lesson-delete-dialog h2 {
+  margin: 0 0 12px;
+}
+
+.lesson-delete-dialog p {
+  line-height: 1.6;
+}
+
+.lesson-delete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.lesson-delete-actions button {
+  min-height: 44px;
+}
+
+.lesson-delete-actions button:focus-visible {
+  outline: 3px solid #6558d3;
+  outline-offset: 2px;
+}
+
 .subjects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
