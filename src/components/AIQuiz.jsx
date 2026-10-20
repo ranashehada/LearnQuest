@@ -103,11 +103,31 @@ function getQuizDraftKey(lessonId) {
   return `${QUIZ_DRAFT_PREFIX}${lessonId || "unknown"}`;
 }
 
+function readSavedQuiz(lessonId) {
+  try {
+    const saved = localStorage.getItem(getQuizDraftKey(lessonId));
+    if (!saved) return { draft: null, error: "" };
+
+    const draft = JSON.parse(saved);
+    if (!Array.isArray(draft.questions) || draft.questions.length === 0) {
+      throw new Error("Invalid saved quiz");
+    }
+
+    return { draft, error: "" };
+  } catch {
+    return {
+      draft: null,
+      error: "Your saved quiz could not be opened. You can start a new quiz.",
+    };
+  }
+}
+
 export default function AIQuiz({
   lessonText,
   lessonId,
   subjectId,
 }) {
+  const [initialSavedQuiz] = useState(() => readSavedQuiz(lessonId));
   const [questionCount, setQuestionCount] = useState(
     () => readQuizSettings().quizQuestionCount
   );
@@ -136,8 +156,9 @@ export default function AIQuiz({
   const [reviewMode, setReviewMode] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialSavedQuiz.error);
   const [saveError, setSaveError] = useState("");
+  const [savedDraft, setSavedDraft] = useState(initialSavedQuiz.draft);
 
   // Keep quiz defaults in sync with Settings.
   // Do not interrupt a quiz already in progress.
@@ -203,37 +224,30 @@ export default function AIQuiz({
     finished,
   ]);
 
-  useEffect(() => {
-    const saved = localStorage.getItem(getQuizDraftKey(lessonId));
+  function resumeQuiz() {
+    if (!savedDraft) return;
 
-    if (!saved) return;
+    setQuestions(savedDraft.questions);
+    setQuizDifficulty(savedDraft.quizDifficulty || "medium");
+    setCurrentIndex(Math.min(
+      Math.max(0, Number(savedDraft.currentIndex) || 0),
+      savedDraft.questions.length - 1
+    ));
+    setSelectedAnswer(savedDraft.selectedAnswer ?? null);
+    setChecked(Boolean(savedDraft.checked));
+    setAnswers(Array.isArray(savedDraft.answers) ? savedDraft.answers : []);
+    setXp(Number(savedDraft.xp) || 0);
+    setSavedDraft(null);
+  }
 
-    const timeout = window.setTimeout(() => {
-      try {
-        const draft = JSON.parse(saved);
-
-        if (!Array.isArray(draft.questions) || draft.questions.length === 0) {
-          return;
-        }
-
-        if (window.confirm("You have an unfinished quiz. Would you like to resume it?")) {
-          setQuestions(draft.questions);
-          setQuizDifficulty(draft.quizDifficulty || "medium");
-          setCurrentIndex(Number(draft.currentIndex) || 0);
-          setSelectedAnswer(draft.selectedAnswer ?? null);
-          setChecked(Boolean(draft.checked));
-          setAnswers(Array.isArray(draft.answers) ? draft.answers : []);
-          setXp(Number(draft.xp) || 0);
-        } else {
-          localStorage.removeItem(getQuizDraftKey(lessonId));
-        }
-      } catch {
-        localStorage.removeItem(getQuizDraftKey(lessonId));
-      }
-    }, 0);
-
-    return () => window.clearTimeout(timeout);
-  }, [lessonId]);
+  function discardSavedQuiz() {
+    try {
+      localStorage.removeItem(getQuizDraftKey(lessonId));
+      setSavedDraft(null);
+    } catch {
+      setError("Could not discard your saved quiz in this browser.");
+    }
+  }
 
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
@@ -250,7 +264,7 @@ export default function AIQuiz({
     : 0;
 
   async function generateQuiz() {
-    if (!lessonText?.trim() || loading) return;
+    if (!lessonText?.trim() || loading || savedDraft) return;
 
     setLoading(true);
     localStorage.removeItem(getQuizDraftKey(lessonId));
@@ -486,7 +500,28 @@ export default function AIQuiz({
       </p>
 
       {/* QUIZ SETTINGS */}
-      {totalQuestions === 0 && !loading && (
+      {savedDraft && totalQuestions === 0 && (
+        <section className="ai-quiz-resume" aria-labelledby="quiz-resume-heading">
+          <h3 id="quiz-resume-heading">Unfinished quiz saved</h3>
+          <p>
+            You were on question {Math.min(
+              Math.max(0, Number(savedDraft.currentIndex) || 0),
+              savedDraft.questions.length - 1
+            ) + 1} of{" "}
+            {savedDraft.questions.length}. Your answers are still here.
+          </p>
+          <div className="ai-quiz-resume-actions">
+            <button type="button" className="ai-quiz-primary" onClick={resumeQuiz}>
+              Continue quiz
+            </button>
+            <button type="button" className="ai-quiz-secondary" onClick={discardSavedQuiz}>
+              Discard saved quiz
+            </button>
+          </div>
+        </section>
+      )}
+
+      {totalQuestions === 0 && !loading && !savedDraft && (
         <div className="ai-quiz-start">
           <div className="ai-quiz-start-icon">
             <Sparkles size={30} aria-hidden="true" />

@@ -2,7 +2,6 @@
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  BookOpen,
   FileText,
   Plus,
   Trash2,
@@ -11,9 +10,13 @@ import {
 import { useEffect, useState } from "react";
 import {
   setLessonStorageUser,
-  deleteLessonFile,
+  deleteLessonFiles,
 } from "../utils/lessonStorage";
 import { API_URL } from "../utils/api";
+import { commitStudyDeletion, prepareLessonDeletion } from "../utils/subjectDeletion";
+import ConfirmDeletionDialog from "../components/ConfirmDeletionDialog";
+import SubjectIcon from "../components/SubjectIcon";
+import { getSubjectIconKey } from "../utils/subjectIconConfig";
 
 
 function getUserKey(userId, type) {
@@ -41,8 +44,15 @@ export default function SubjectDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [pendingLesson, setPendingLesson] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteNotice, setDeleteNotice] = useState("");
   const [quizHistory, setQuizHistory] = useState([]);
   const [expandedQuizId, setExpandedQuizId] = useState(null);
+
+  useEffect(() => {
+    if (deleteNotice) document.getElementById("subject-lessons-heading")?.focus();
+  }, [deleteNotice]);
 
   useEffect(() => {
     let active = true;
@@ -127,40 +137,32 @@ export default function SubjectDetails() {
   );
 
   async function handleDelete(lesson) {
-    if (!userId) return;
-
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${lesson.title}"?`
-    );
-
-    if (!confirmed) return;
-
+    if (!userId || deletingId) return;
     setDeletingId(lesson.id);
+    setDeleteError("");
 
     try {
-      const updated = lessons.filter(
-        (item) => item.id !== lesson.id
-      );
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Please log in again before deleting a lesson.");
+      const data = await response.json();
+      if (String(data.user?.id) !== String(userId)) {
+        throw new Error("Your account changed. Refresh before deleting a lesson.");
+      }
 
-      // Update this account's lesson list.
-      localStorage.setItem(
-        getUserKey(userId, "lessons"),
-        JSON.stringify(updated)
-      );
-
-      setLessons(updated);
-
-      // Remove the uploaded file from IndexedDB for this account.
+      const prepared = prepareLessonDeletion(localStorage, userId, id, lesson.id);
       setLessonStorageUser(userId);
-      await deleteLessonFile(lesson.id).catch(() => {});
-
-      window.dispatchEvent(
-        new Event("learnquest:stats-updated")
-      );
-    } catch {
-      window.alert(
-        "Could not delete the lesson. Please try again."
-      );
+      await commitStudyDeletion(localStorage, prepared, deleteLessonFiles);
+      setLessons(JSON.parse(prepared.changes.get(getUserKey(userId, "lessons"))));
+      setQuizHistory(readArray("learnquest-quiz-results").filter(
+        (quiz) => String(quiz.subjectId) === String(id)
+      ));
+      setPendingLesson(null);
+      setDeleteNotice(`"${lesson.title}" and its uploaded file were deleted. Earned XP was kept.`);
+      window.dispatchEvent(new Event("learnquest:stats-updated"));
+    } catch (err) {
+      setDeleteError(err.message || "Could not delete the lesson. Your data was left untouched.");
     } finally {
       setDeletingId(null);
     }
@@ -208,8 +210,8 @@ export default function SubjectDetails() {
 
       <header className="subject-details-header">
         <div>
-          <div className="subject-details-icon">
-            <BookOpen size={28} />
+          <div className={`subject-details-icon subject-visual--${getSubjectIconKey(subject)}`}>
+            <SubjectIcon subject={subject} size={28} />
           </div>
 
           <h1>{subject.name}</h1>
@@ -229,9 +231,27 @@ export default function SubjectDetails() {
         </Link>
       </header>
 
+      {deleteNotice && <p role="status">{deleteNotice}</p>}
+
+      {pendingLesson && (
+        <ConfirmDeletionDialog
+          title="Delete this lesson?"
+          description={`"${pendingLesson.title}" and its uploaded file, saved AI content, unfinished quiz, and detailed answer reviews will be permanently deleted. Earned XP and scores will stay. This cannot be undone.`}
+          confirmLabel="Delete lesson permanently"
+          cancelLabel="Keep lesson"
+          deleting={deletingId === pendingLesson.id}
+          error={deleteError}
+          onClose={() => {
+            setPendingLesson(null);
+            setDeleteError("");
+          }}
+          onConfirm={() => handleDelete(pendingLesson)}
+        />
+      )}
+
       <section className="subject-lessons-section">
         <div className="subject-lessons-heading">
-          <h2>Lessons</h2>
+          <h2 id="subject-lessons-heading" tabIndex={-1}>Lessons</h2>
 
           <span>
             {subjectLessons.length}{" "}
@@ -288,8 +308,12 @@ export default function SubjectDetails() {
                   type="button"
                   className="subject-lesson-delete"
                   aria-label={`Delete ${lesson.title}`}
-                  disabled={deletingId === lesson.id}
-                  onClick={() => handleDelete(lesson)}
+                  disabled={deletingId !== null}
+                  onClick={() => {
+                    setDeleteNotice("");
+                    setDeleteError("");
+                    setPendingLesson(lesson);
+                  }}
                 >
                   <Trash2 size={19} />
                 </button>

@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -10,19 +10,16 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { API_URL } from "../utils/api";
+import { deleteLessonFiles, setLessonStorageUser } from "../utils/lessonStorage";
+import { commitStudyDeletion, prepareSubjectDeletion } from "../utils/subjectDeletion";
+import ConfirmDeletionDialog from "../components/ConfirmDeletionDialog";
+import SubjectIcon from "../components/SubjectIcon";
+import { SUBJECT_ICON_CHOICES, getSubjectIconKey } from "../utils/subjectIconConfig";
+import { readSubjectList, saveSubjectList } from "../utils/subjectStorage";
 
 
 function getSubjectsKey(userId) {
   return `learnquest-user-${userId}-subjects`;
-}
-
-function readSubjects(key) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(saved) ? saved : [];
-  } catch {
-    return [];
-  }
 }
 
 export default function MySubjects() {
@@ -36,7 +33,17 @@ export default function MySubjects() {
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [subjectIcon, setSubjectIcon] = useState("auto");
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [pendingDeletion, setPendingDeletion] = useState(null);
+  const [deletionError, setDeletionError] = useState("");
+  const [deletionNotice, setDeletionNotice] = useState("");
+  const savedSubjectsRaw = useRef(null);
+
+  useEffect(() => {
+    if (deletionNotice) document.getElementById("subjects-heading")?.focus();
+  }, [deletionNotice]);
 
   useEffect(() => {
     let active = true;
@@ -67,8 +74,10 @@ export default function MySubjects() {
         const id = data.user.id;
         const key = getSubjectsKey(id);
 
+        const saved = readSubjectList(localStorage, key);
+        savedSubjectsRaw.current = saved.raw;
         setUserId(id);
-        setSubjects(readSubjects(key));
+        setSubjects(saved.subjects);
       } catch (err) {
         if (active) {
           setAccountError(
@@ -91,16 +100,13 @@ export default function MySubjects() {
 
   function saveSubjects(updated) {
     if (!userId) {
-      setAccountError(
-        "Your account could not be identified. Please log in again."
-      );
-      return;
+      setError("Your account could not be identified. Your draft is still here; please log in again.");
+      return false;
     }
 
     try {
-      localStorage.setItem(
-        getSubjectsKey(userId),
-        JSON.stringify(updated)
+      savedSubjectsRaw.current = saveSubjectList(
+        localStorage, getSubjectsKey(userId), savedSubjectsRaw.current, updated
       );
 
       setSubjects(updated);
@@ -108,10 +114,10 @@ export default function MySubjects() {
       window.dispatchEvent(
         new Event("learnquest:stats-updated")
       );
-    } catch {
-      setError(
-        "Unable to save subjects in this browser."
-      );
+      return true;
+    } catch (err) {
+      setError(err.message || "Unable to save subjects in this browser. Your draft is still here.");
+      return false;
     }
   }
 
@@ -119,6 +125,7 @@ export default function MySubjects() {
     setEditingId(null);
     setName("");
     setDescription("");
+    setSubjectIcon("auto");
     setError("");
     setShowForm(true);
   }
@@ -127,6 +134,7 @@ export default function MySubjects() {
     setEditingId(subject.id);
     setName(subject.name);
     setDescription(subject.description || "");
+    setSubjectIcon(subject.icon || "auto");
     setError("");
     setShowForm(true);
   }
@@ -146,20 +154,22 @@ export default function MySubjects() {
               ...subject,
               name: name.trim(),
               description: description.trim(),
+              icon: subjectIcon,
             }
           : subject
       );
 
-      saveSubjects(updated);
+      if (!saveSubjects(updated)) return;
     } else {
       const newSubject = {
         id: crypto.randomUUID(),
         name: name.trim(),
         description: description.trim(),
+        icon: subjectIcon,
         createdAt: new Date().toISOString(),
       };
 
-      saveSubjects([...subjects, newSubject]);
+      if (!saveSubjects([...subjects, newSubject])) return;
     }
 
     setShowForm(false);
@@ -168,16 +178,50 @@ export default function MySubjects() {
     setDescription("");
   }
 
-  function deleteSubject(subject) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${subject.name}"?`
-    );
+  function openDeleteSubject(subject) {
+    if (!userId || deletingId) return;
+    setError("");
+    setDeletionError("");
+    setDeletionNotice("");
 
-    if (!confirmed) return;
+    try {
+      const prepared = prepareSubjectDeletion(localStorage, userId, subject.id);
+      setPendingDeletion({ subject, prepared });
+    } catch (err) {
+      setError(err.message || "Could not prepare subject deletion. Nothing was deleted.");
+    }
+  }
 
-    saveSubjects(
-      subjects.filter((item) => item.id !== subject.id)
-    );
+  async function confirmDeleteSubject() {
+    if (!pendingDeletion || deletingId) return;
+    const { subject, prepared } = pendingDeletion;
+    const count = prepared.lessonIds.length;
+    setDeletingId(subject.id);
+    setDeletionError("");
+
+    try {
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Please log in again before deleting a subject.");
+      const data = await response.json();
+      if (String(data.user?.id) !== String(userId)) {
+        throw new Error("Your account changed. Refresh before deleting a subject.");
+      }
+
+      setLessonStorageUser(userId);
+      await commitStudyDeletion(localStorage, prepared, deleteLessonFiles);
+      savedSubjectsRaw.current = prepared.changes.get(getSubjectsKey(userId));
+      setSubjects(JSON.parse(prepared.changes.get(getSubjectsKey(userId))));
+      if (editingId === subject.id) setShowForm(false);
+      setPendingDeletion(null);
+      setDeletionNotice(`"${subject.name}" and its ${count} ${count === 1 ? "lesson" : "lessons"} were deleted. Earned XP was kept.`);
+      window.dispatchEvent(new Event("learnquest:stats-updated"));
+    } catch (err) {
+      setDeletionError(err.message || "Could not delete the subject. Your data was left untouched.");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   const filteredSubjects = subjects.filter((subject) =>
@@ -210,7 +254,7 @@ export default function MySubjects() {
     <div className="subjects-page">
       <div className="subjects-heading">
         <div>
-          <h1>My Subjects</h1>
+          <h1 id="subjects-heading" tabIndex={-1}>My Subjects</h1>
           <p>Organize and manage your learning subjects.</p>
         </div>
 
@@ -236,6 +280,26 @@ export default function MySubjects() {
           }
         />
       </div>
+
+      {deletionNotice && <p role="status">{deletionNotice}</p>}
+      {error && !showForm && <p className="form-error" role="alert">{error}</p>}
+      {deletingId && <p role="status">Deleting subject and uploaded files...</p>}
+
+      {pendingDeletion && (
+        <ConfirmDeletionDialog
+          title="Delete this subject?"
+          description={`"${pendingDeletion.subject.name}" and ${pendingDeletion.prepared.lessonIds.length} ${pendingDeletion.prepared.lessonIds.length === 1 ? "lesson" : "lessons"} will be permanently deleted, along with uploaded files, saved AI content, unfinished quizzes, and detailed answer reviews. Earned XP and scores will stay, and planned study sessions will become general sessions. This cannot be undone.`}
+          confirmLabel="Delete subject permanently"
+          cancelLabel="Keep subject"
+          deleting={deletingId === pendingDeletion.subject.id}
+          error={deletionError}
+          onClose={() => {
+            setPendingDeletion(null);
+            setDeletionError("");
+          }}
+          onConfirm={confirmDeleteSubject}
+        />
+      )}
 
       {showForm && (
         <div className="subject-form-card">
@@ -275,6 +339,30 @@ export default function MySubjects() {
               rows={3}
               maxLength={500}
             />
+
+            <fieldset className="subject-icon-picker">
+              <legend>Subject icon</legend>
+              <div className="subject-icon-options">
+                {SUBJECT_ICON_CHOICES.map((choice) => {
+                  const preview = { name, icon: choice.key };
+                  return (
+                    <label key={choice.key} className="subject-icon-option">
+                      <input
+                        type="radio"
+                        name="subjectIcon"
+                        value={choice.key}
+                        checked={subjectIcon === choice.key}
+                        onChange={() => setSubjectIcon(choice.key)}
+                      />
+                      <span className={`subject-icon subject-visual--${getSubjectIconKey(preview)}`}>
+                        <SubjectIcon subject={preview} size={24} />
+                      </span>
+                      <span>{choice.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
 
             {error && (
               <p className="form-error" role="alert">
@@ -336,8 +424,8 @@ export default function MySubjects() {
               key={subject.id}
             >
               <div className="subject-card-top">
-                <div className="subject-icon">
-                  <BookOpen size={26} />
+                <div className={`subject-icon subject-visual--${getSubjectIconKey(subject)}`}>
+                  <SubjectIcon subject={subject} />
                 </div>
 
                 <div className="subject-card-actions">
@@ -354,8 +442,9 @@ export default function MySubjects() {
                   <button
                     aria-label={`Delete ${subject.name}`}
                     title="Delete subject"
+                    disabled={deletingId !== null}
                     onClick={() =>
-                      deleteSubject(subject)
+                      openDeleteSubject(subject)
                     }
                   >
                     <Trash2 size={18} />

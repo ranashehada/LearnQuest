@@ -546,9 +546,28 @@ export default function LessonDetails() {
               id={`tab-${tab.id}`}
               aria-selected={activeTab === tab.id}
               aria-controls="study-tab-panel"
+              tabIndex={activeTab === tab.id ? 0 : -1}
               className={`lesson-tab ${
                 activeTab === tab.id ? "active" : ""
               }`}
+              onKeyDown={(event) => {
+                const currentIndex = tabs.findIndex((item) => item.id === tab.id);
+                let nextIndex;
+
+                if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % tabs.length;
+                else if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                else if (event.key === "Home") nextIndex = 0;
+                else if (event.key === "End") nextIndex = tabs.length - 1;
+                else return;
+
+                event.preventDefault();
+                const nextTab = tabs[nextIndex];
+                setActiveTab(nextTab.id);
+                setAiError("");
+                event.currentTarget.parentElement
+                  .querySelectorAll('[role="tab"]')[nextIndex]
+                  .focus();
+              }}
               onClick={() => {
                 setActiveTab(tab.id);
                 setAiError("");
@@ -567,6 +586,7 @@ export default function LessonDetails() {
         className="lesson-content-card study-tab-content"
         role="tabpanel"
         aria-labelledby={`tab-${activeTab}`}
+        tabIndex={0}
       >
         {activeTab === "explanation" && (
           <div>

@@ -177,7 +177,13 @@ export async function getLessonFile(id) {
 }
 
 export async function deleteLessonFile(id) {
-  const key = getFileKey(id);
+  return deleteLessonFiles([id]);
+}
+
+// One IndexedDB transaction keeps a subject's file deletion all-or-nothing.
+export async function deleteLessonFiles(ids) {
+  if (ids.length === 0) return;
+  const keys = ids.map(getFileKey);
   const db = await openDatabase();
 
   return new Promise((resolve, reject) => {
@@ -186,7 +192,8 @@ export async function deleteLessonFile(id) {
       "readwrite"
     );
 
-    transaction.objectStore(STORE_NAME).delete(key);
+    const store = transaction.objectStore(STORE_NAME);
+    keys.forEach((key) => store.delete(key));
 
     transaction.oncomplete = () => {
       db.close();
@@ -196,6 +203,11 @@ export async function deleteLessonFile(id) {
     transaction.onerror = () => {
       db.close();
       reject(transaction.error);
+    };
+
+    transaction.onabort = () => {
+      db.close();
+      reject(transaction.error || new Error("File deletion was cancelled."));
     };
   });
 }

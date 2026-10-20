@@ -92,6 +92,103 @@
   color: #7858db;
 }
 
+.lq-level-celebration {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(360px, calc(100vw - 36px));
+  min-height: 86px;
+  padding: 14px;
+  border: 1px solid #d5bc79;
+  border-radius: 16px;
+  background: #fffbef;
+  box-shadow: 0 16px 40px rgba(54, 39, 86, 0.2);
+  color: #39294d;
+  animation: lq-level-arrive 500ms ease-out both;
+}
+
+.lq-level-celebration-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 15px;
+  background: #fff0bd;
+  color: #a15a0a;
+  animation: lq-level-pop 700ms ease-out both;
+}
+
+.lq-level-spark {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #e4a527;
+  animation: lq-level-spark 700ms ease-out both;
+}
+
+.lq-level-spark-one { top: 2px; left: 2px; --spark-x: -9px; --spark-y: -9px; }
+.lq-level-spark-two { top: 5px; right: 3px; --spark-x: 8px; --spark-y: -10px; }
+.lq-level-spark-three { bottom: 4px; right: 0; --spark-x: 10px; --spark-y: 8px; }
+
+.lq-level-celebration-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.lq-level-celebration-copy strong { font-size: 16px; }
+.lq-level-celebration-copy span { font-size: 12px; line-height: 1.4; }
+
+.lq-level-celebration button {
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.lq-level-celebration button:hover { background: #f6e8bd; }
+.lq-level-celebration button:focus-visible { outline: 3px solid #6558d3; outline-offset: 2px; }
+
+@keyframes lq-level-arrive {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lq-level-pop {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes lq-level-spark {
+  from { opacity: 1; transform: translate(0, 0) scale(1); }
+  to { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lq-level-celebration,
+  .lq-level-celebration-art,
+  .lq-level-spark { animation: none; }
+  .lq-level-spark { display: none; }
+  .lq-level-progress-fill { transition: none; }
+}
+
 /* PROFILE */
 
 .lq-profile-wrapper {
