@@ -26,6 +26,7 @@ import StudyPlanner from "./pages/StudyPlanner";
 import { API_URL } from "./utils/api";
 
 import "./App.css";
+import "./DarkMode.css";
 
 
 // Check whether the user has an active session.

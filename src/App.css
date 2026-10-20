@@ -637,9 +637,10 @@ a {
 
 .subject-cancel-btn {
   padding: 12px 20px;
-  background: white;
+  background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
+  color: #1e2440;
   cursor: pointer;
 }
 
@@ -648,7 +649,9 @@ a {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 28px;
+  background: #ffffff;
   color: #20233d;
+  color-scheme: light;
   box-shadow: 0 24px 60px rgba(32, 35, 61, 0.2);
 }
 
@@ -658,10 +661,22 @@ a {
 
 .confirm-delete-dialog h2 {
   margin: 0 0 12px;
+  color: #20233d;
 }
 
 .confirm-delete-dialog p {
   line-height: 1.6;
+  color: #3b415c;
+}
+
+.confirm-delete-dialog .subject-cancel-btn {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #1e2440;
+}
+
+.confirm-delete-dialog .btn-primary {
+  color: #ffffff;
 }
 
 .confirm-delete-actions {

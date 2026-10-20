@@ -202,3 +202,576 @@ html[data-lq-theme="dark"] :is(
 html[data-lq-theme="dark"] .study-chat-message p {
   color: #d2c9e4;
 }
+
+/* Delete confirmation dialog — keep readable contrast in dark mode */
+html[data-lq-theme="dark"] .confirm-delete-dialog {
+  background: #2a2438;
+  border-color: #4a4260;
+  color: #f3efff;
+  color-scheme: dark;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+html[data-lq-theme="dark"] .confirm-delete-dialog h2 {
+  color: #f8f5ff;
+}
+
+html[data-lq-theme="dark"] .confirm-delete-dialog p {
+  color: #d8d0ea;
+}
+
+html[data-lq-theme="dark"] .confirm-delete-dialog .subject-cancel-btn {
+  background: #3a334d;
+  border-color: #6b6280;
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .confirm-delete-dialog .btn-primary {
+  background: #7c6ae8;
+  border-color: #9b8cff;
+  color: #ffffff;
+}
+
+html[data-lq-theme="dark"] .confirm-delete-dialog .form-error {
+  color: #ffb4b4;
+}
+
+/* =========================================================
+   Full-app dark consistency (tabs, quiz, focus, auth, etc.)
+   ========================================================= */
+
+html[data-lq-theme="dark"] {
+  --lq-card-bg: #242035;
+  --lq-border: #514766;
+  --card-bg: #242035;
+}
+
+/* Dashboard actions + chips */
+html[data-lq-theme="dark"] .lq-dashboard-actions {
+  background: linear-gradient(120deg, #302548, #242035);
+  border-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-actions-intro h2 {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-actions-intro p,
+html[data-lq-theme="dark"] .lq-dashboard-action:not(.primary) small {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-action:not(.primary) {
+  background: #2c273f;
+  border-color: #433b59;
+  color: #c7b8ff;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-action:not(.primary):hover {
+  background: #382d50;
+  border-color: #aa8aff;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-level-chip {
+  background: #382d50;
+  color: #c7b8ff;
+}
+
+html[data-lq-theme="dark"] .lq-dashboard-action.primary small {
+  color: #f5f3ff;
+}
+
+/* Header / profile menu */
+html[data-lq-theme="dark"] .lq-gamified-welcome h2,
+html[data-lq-theme="dark"] .lq-level-left h3,
+html[data-lq-theme="dark"] .lq-dropdown-user strong {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .lq-gamified-welcome p,
+html[data-lq-theme="dark"] .lq-level-caption,
+html[data-lq-theme="dark"] .lq-level-progress-area p,
+html[data-lq-theme="dark"] .lq-level-progress-info,
+html[data-lq-theme="dark"] .lq-milestone-progress {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .lq-level-left h3 span {
+  color: #c6a9ff;
+}
+
+html[data-lq-theme="dark"] .lq-level-progress-info strong,
+html[data-lq-theme="dark"] .lq-milestone-progress strong {
+  color: #d4c4ff;
+}
+
+html[data-lq-theme="dark"] .lq-level-progress-track {
+  background: #433b59;
+}
+
+html[data-lq-theme="dark"] .lq-profile-trigger {
+  background: #2c273f;
+  border-color: #514766;
+  color: #c7bfdc;
+}
+
+html[data-lq-theme="dark"] .lq-profile-trigger:hover {
+  background: #382d50;
+}
+
+html[data-lq-theme="dark"] .lq-profile-dropdown button {
+  color: #d2c9e4;
+}
+
+html[data-lq-theme="dark"] .lq-profile-dropdown button:hover {
+  background: #382d50;
+  color: #e3d8ff;
+}
+
+html[data-lq-theme="dark"] .lq-dropdown-divider {
+  background: #433b59;
+}
+
+html[data-lq-theme="dark"] .lq-dropdown-user span {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .lq-streak-badge {
+  background: #3d2a20;
+  color: #ffc9a3;
+}
+
+html[data-lq-theme="dark"] .lq-xp-badge {
+  background: #322a4a;
+  color: #c7b8ff;
+}
+
+/* Focus timer */
+html[data-lq-theme="dark"] .lq-focus-card {
+  color: #eeeafb;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+}
+
+html[data-lq-theme="dark"] .lq-focus-title h2 {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .lq-focus-title p,
+html[data-lq-theme="dark"] .lq-focus-status {
+  color: #b8afcd;
+  opacity: 1;
+}
+
+html[data-lq-theme="dark"] .lq-focus-secondary {
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .lq-focus-options button {
+  color: #eeeafb;
+  border-color: #514766;
+}
+
+html[data-lq-theme="dark"] .lq-focus-options button.selected {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: #aa97ff;
+  color: #d4c4ff;
+}
+
+/* Lesson tabs + AI chrome */
+html[data-lq-theme="dark"] .lesson-tabs {
+  border-bottom-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .lesson-tab {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .lesson-tab:hover {
+  background: #342a52;
+  color: #e3d8ff;
+}
+
+html[data-lq-theme="dark"] .lesson-tab.active {
+  color: #c7b8ff;
+  border-bottom-color: #aa97ff;
+}
+
+html[data-lq-theme="dark"] .study-section-heading h2 {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .study-tab-content > div > p,
+html[data-lq-theme="dark"] .lesson-helper,
+html[data-lq-theme="dark"] .ai-saved-note,
+html[data-lq-theme="dark"] .lesson-status,
+html[data-lq-theme="dark"] .lesson-file-meta {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .ai-transparency-notice {
+  background: #302748;
+  color: #d2c9e4;
+  border-left-color: #aa97ff;
+}
+
+html[data-lq-theme="dark"] .ai-retry-button {
+  background: #302a45;
+  border-color: #514766;
+  color: #d9cbff;
+}
+
+html[data-lq-theme="dark"] .ai-retry-button:hover:not(:disabled) {
+  background: #382d50;
+  color: #e3d8ff;
+}
+
+html[data-lq-theme="dark"] .ai-error-box {
+  color: #ffb4b4;
+}
+
+/* Subjects / lesson extras */
+html[data-lq-theme="dark"] :is(
+  .subjects-empty,
+  .subject-quiz-history,
+  .subject-quiz-review,
+  .subject-details-page,
+  .add-lesson-page,
+  .lesson-details-page
+) {
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] :is(.subjects-empty, .subject-quiz-history, .subject-quiz-review) {
+  background: #2c273f;
+  border-color: #433b59;
+}
+
+html[data-lq-theme="dark"] :is(
+  .subject-cancel-btn,
+  .subject-card-actions button,
+  .subject-quiz-review-button
+) {
+  background: #302a45;
+  border-color: #514766;
+  color: #d9cbff;
+}
+
+html[data-lq-theme="dark"] .subject-card-actions button:hover {
+  background: #382d50;
+  color: #e3d8ff;
+}
+
+html[data-lq-theme="dark"] .subject-quiz-history-item {
+  border-top-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .subject-quiz-history-item strong {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .subject-quiz-history-item p,
+html[data-lq-theme="dark"] .subject-quiz-review span {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .subject-lesson-delete {
+  background: #3d2430;
+  color: #ffb4b4;
+}
+
+html[data-lq-theme="dark"] .lesson-form-section input[readonly] {
+  background: #241e33;
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .lesson-upload-zone.dragging {
+  background: #342a52;
+  border-color: #aa97ff;
+}
+
+/* AI Quiz */
+html[data-lq-theme="dark"] .ai-quiz {
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] :is(
+  .ai-quiz-start,
+  .ai-quiz-loading,
+  .ai-quiz-resume,
+  .ai-quiz-question-card,
+  .lq-review-card,
+  .ai-quiz-result,
+  .lq-game
+) {
+  background: #2c273f;
+  border-color: #433b59;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] :is(
+  .ai-quiz-option,
+  .ai-quiz-secondary,
+  .ai-quiz-hint-button,
+  .ai-quiz-settings select
+) {
+  background: #242035;
+  border-color: #514766;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-option:hover:not(:disabled) {
+  background: #342a52;
+  border-color: #aa97ff;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-option.selected {
+  background: #382d50;
+  border-color: #aa8aff;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-option.correct {
+  background: #1f3d30;
+  border-color: #3fa56a;
+  color: #b5eac9;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-option.incorrect {
+  background: #3d2430;
+  border-color: #c45b5b;
+  color: #ffc5cf;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-letter {
+  background: #39334e;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-type {
+  background: #39334e;
+  color: #c7bfdc;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-progress-track {
+  background: #39334e;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-explanation {
+  background: #302748;
+  color: #d2c9e4;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-explanation strong {
+  color: #c6a9ff;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-hint-text {
+  background: #3a3420;
+  color: #ffe6a8;
+  border-left-color: #e2b84b;
+}
+
+html[data-lq-theme="dark"] :is(
+  .ai-quiz-header h2,
+  .ai-quiz-start h3,
+  .ai-quiz-loading h3,
+  .ai-quiz-question-card h3,
+  .lq-quiz-review > h3,
+  .lq-review-card h4,
+  .lq-game-counter,
+  .ai-quiz-settings label,
+  .ai-quiz-answer-label,
+  .ai-quiz-number
+) {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(
+  .ai-quiz-header p,
+  .ai-quiz-start p,
+  .ai-quiz-loading p,
+  .ai-quiz-footer p,
+  .lq-quiz-review > p
+) {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .ai-quiz-error {
+  background: #3d2430;
+  border-color: #c45b5b;
+  color: #ffc5cf;
+}
+
+html[data-lq-theme="dark"] .lq-game-xp,
+html[data-lq-theme="dark"] .lq-final-xp {
+  color: #ffd98d;
+}
+
+/* AI markdown responses */
+html[data-lq-theme="dark"] .ai-response {
+  color: #d2c9e4;
+}
+
+html[data-lq-theme="dark"] :is(.ai-response h1, .ai-response h2, .ai-response h3) {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] .ai-response h2 {
+  border-bottom-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .ai-response strong {
+  color: #c6a9ff;
+}
+
+html[data-lq-theme="dark"] .ai-response blockquote {
+  background: #302748;
+  color: #d8d0ea;
+}
+
+html[data-lq-theme="dark"] .ai-response code {
+  background: #39334e;
+  color: #c7b8ff;
+}
+
+html[data-lq-theme="dark"] :is(.ai-response th, .ai-response td) {
+  border-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .ai-response th {
+  background: #302748;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .ai-response tr:nth-child(even) {
+  background: #241e33;
+}
+
+html[data-lq-theme="dark"] .ai-response hr {
+  border-top-color: #433b59;
+}
+
+html[data-lq-theme="dark"] .ai-response a {
+  color: #c7b8ff;
+}
+
+html[data-lq-theme="dark"] .ai-response li::marker {
+  color: #aa97ff;
+}
+
+/* Auth + Welcome */
+html[data-lq-theme="dark"] :is(.welcome, .auth-page) {
+  background: linear-gradient(135deg, #151321, #241c38);
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] :is(.auth-card, .feature-card) {
+  background: #242035;
+  border-color: #39334e;
+  color: #eeeafb;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+html[data-lq-theme="dark"] .auth-card input {
+  background: #2c273f;
+  border-color: #514766;
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(.auth-card h1, .welcome-main h1, .feature-card h3, .auth-logo span) {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(.auth-card > p, .welcome-main > p, .feature-card p, .auth-footer) {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .btn-outline {
+  color: #c7b8ff;
+  border-color: #aa97ff;
+  background: transparent;
+}
+
+html[data-lq-theme="dark"] .btn-outline:hover {
+  background: #342a52;
+}
+
+html[data-lq-theme="dark"] .password-field button {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .auth-footer a {
+  color: #c7b8ff;
+}
+
+/* Profile / Settings / Progress leftovers */
+html[data-lq-theme="dark"] .lq-profile-fields label,
+html[data-lq-theme="dark"] .lq-settings-fields label {
+  color: #d2c9e4;
+}
+
+html[data-lq-theme="dark"] :is(
+  .lq-profile-note,
+  .lq-profile-level small,
+  .lq-settings-note,
+  .lq-settings-toggle-row p,
+  .lq-stat-label,
+  .lq-dashboard-stat small
+) {
+  color: #b8afcd;
+}
+
+html[data-lq-theme="dark"] .lq-settings-toggle-row strong {
+  color: #f3efff;
+}
+
+html[data-lq-theme="dark"] :is(.lq-profile-success, .lq-settings-success) {
+  background: #203d32;
+  color: #b5eac9;
+}
+
+html[data-lq-theme="dark"] :is(.lq-profile-error, .lq-settings-error) {
+  background: #492832;
+  color: #ffc5cf;
+}
+
+html[data-lq-theme="dark"] .lq-progress-achievement.unlocked {
+  background: #322a4a;
+  border-color: #514766;
+}
+
+html[data-lq-theme="dark"] .lq-progress-achievement.locked {
+  background: #241e33;
+  border-color: #39334e;
+}
+
+html[data-lq-theme="dark"] .lq-progress-tag {
+  background: #382d50;
+  color: #c7b8ff;
+}
+
+html[data-lq-theme="dark"] .lq-progress-chart-track,
+html[data-lq-theme="dark"] .lq-xp-chart-track {
+  background: #39334e;
+}
+
+html[data-lq-theme="dark"] .lq-xp-chart-value,
+html[data-lq-theme="dark"] .lq-xp-chart-day {
+  color: #b8afcd;
+}
+
+/* Planner dialogs inherit page tokens; reinforce for safety */
+html[data-lq-theme="dark"] :is(.planner-page, .planner-dialog) {
+  --planner-bg: #242035;
+  --planner-soft: #302748;
+  --planner-border: #514366;
+  --planner-text: #f2edfc;
+  --planner-muted: #c1b6d3;
+  --planner-accent: #c6a9ff;
+  color-scheme: dark;
+}
+
+html[data-lq-theme="dark"] .planner-dialog {
+  background: var(--planner-bg);
+  color: var(--planner-text);
+  border: 1px solid var(--planner-border);
+}
