@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen,
@@ -13,19 +13,13 @@ import { API_URL } from "../utils/api";
 import { deleteLessonFiles, setLessonStorageUser } from "../utils/lessonStorage";
 import { commitStudyDeletion, prepareSubjectDeletion } from "../utils/subjectDeletion";
 import ConfirmDeletionDialog from "../components/ConfirmDeletionDialog";
+import SubjectIcon from "../components/SubjectIcon";
+import { SUBJECT_ICON_CHOICES, getSubjectIconKey } from "../utils/subjectIconConfig";
+import { readSubjectList, saveSubjectList } from "../utils/subjectStorage";
 
 
 function getSubjectsKey(userId) {
   return `learnquest-user-${userId}-subjects`;
-}
-
-function readSubjects(key) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(saved) ? saved : [];
-  } catch {
-    return [];
-  }
 }
 
 export default function MySubjects() {
@@ -39,11 +33,13 @@ export default function MySubjects() {
   const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [subjectIcon, setSubjectIcon] = useState("auto");
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [pendingDeletion, setPendingDeletion] = useState(null);
   const [deletionError, setDeletionError] = useState("");
   const [deletionNotice, setDeletionNotice] = useState("");
+  const savedSubjectsRaw = useRef(null);
 
   useEffect(() => {
     if (deletionNotice) document.getElementById("subjects-heading")?.focus();
@@ -78,8 +74,10 @@ export default function MySubjects() {
         const id = data.user.id;
         const key = getSubjectsKey(id);
 
+        const saved = readSubjectList(localStorage, key);
+        savedSubjectsRaw.current = saved.raw;
         setUserId(id);
-        setSubjects(readSubjects(key));
+        setSubjects(saved.subjects);
       } catch (err) {
         if (active) {
           setAccountError(
@@ -102,16 +100,13 @@ export default function MySubjects() {
 
   function saveSubjects(updated) {
     if (!userId) {
-      setAccountError(
-        "Your account could not be identified. Please log in again."
-      );
-      return;
+      setError("Your account could not be identified. Your draft is still here; please log in again.");
+      return false;
     }
 
     try {
-      localStorage.setItem(
-        getSubjectsKey(userId),
-        JSON.stringify(updated)
+      savedSubjectsRaw.current = saveSubjectList(
+        localStorage, getSubjectsKey(userId), savedSubjectsRaw.current, updated
       );
 
       setSubjects(updated);
@@ -119,10 +114,10 @@ export default function MySubjects() {
       window.dispatchEvent(
         new Event("learnquest:stats-updated")
       );
-    } catch {
-      setError(
-        "Unable to save subjects in this browser."
-      );
+      return true;
+    } catch (err) {
+      setError(err.message || "Unable to save subjects in this browser. Your draft is still here.");
+      return false;
     }
   }
 
@@ -130,6 +125,7 @@ export default function MySubjects() {
     setEditingId(null);
     setName("");
     setDescription("");
+    setSubjectIcon("auto");
     setError("");
     setShowForm(true);
   }
@@ -138,6 +134,7 @@ export default function MySubjects() {
     setEditingId(subject.id);
     setName(subject.name);
     setDescription(subject.description || "");
+    setSubjectIcon(subject.icon || "auto");
     setError("");
     setShowForm(true);
   }
@@ -157,20 +154,22 @@ export default function MySubjects() {
               ...subject,
               name: name.trim(),
               description: description.trim(),
+              icon: subjectIcon,
             }
           : subject
       );
 
-      saveSubjects(updated);
+      if (!saveSubjects(updated)) return;
     } else {
       const newSubject = {
         id: crypto.randomUUID(),
         name: name.trim(),
         description: description.trim(),
+        icon: subjectIcon,
         createdAt: new Date().toISOString(),
       };
 
-      saveSubjects([...subjects, newSubject]);
+      if (!saveSubjects([...subjects, newSubject])) return;
     }
 
     setShowForm(false);
@@ -212,6 +211,7 @@ export default function MySubjects() {
 
       setLessonStorageUser(userId);
       await commitStudyDeletion(localStorage, prepared, deleteLessonFiles);
+      savedSubjectsRaw.current = prepared.changes.get(getSubjectsKey(userId));
       setSubjects(JSON.parse(prepared.changes.get(getSubjectsKey(userId))));
       if (editingId === subject.id) setShowForm(false);
       setPendingDeletion(null);
@@ -340,6 +340,30 @@ export default function MySubjects() {
               maxLength={500}
             />
 
+            <fieldset className="subject-icon-picker">
+              <legend>Subject icon</legend>
+              <div className="subject-icon-options">
+                {SUBJECT_ICON_CHOICES.map((choice) => {
+                  const preview = { name, icon: choice.key };
+                  return (
+                    <label key={choice.key} className="subject-icon-option">
+                      <input
+                        type="radio"
+                        name="subjectIcon"
+                        value={choice.key}
+                        checked={subjectIcon === choice.key}
+                        onChange={() => setSubjectIcon(choice.key)}
+                      />
+                      <span className={`subject-icon subject-visual--${getSubjectIconKey(preview)}`}>
+                        <SubjectIcon subject={preview} size={24} />
+                      </span>
+                      <span>{choice.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+
             {error && (
               <p className="form-error" role="alert">
                 {error}
@@ -400,8 +424,8 @@ export default function MySubjects() {
               key={subject.id}
             >
               <div className="subject-card-top">
-                <div className="subject-icon">
-                  <BookOpen size={26} />
+                <div className={`subject-icon subject-visual--${getSubjectIconKey(subject)}`}>
+                  <SubjectIcon subject={subject} />
                 </div>
 
                 <div className="subject-card-actions">

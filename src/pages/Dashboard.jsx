@@ -18,6 +18,8 @@ import {
 import "./Dashboard.css";
 import FocusTimer from "./FocusTimer";
 import { API_URL } from "../utils/api";
+import SubjectIcon from "../components/SubjectIcon";
+import { getSubjectIconKey } from "../utils/subjectIconConfig";
 
 const TASK_XP = 5;
 const RESULTS_KEY = "learnquest-quiz-results";
@@ -783,8 +785,8 @@ export default function Dashboard() {
                       to={`/subjects/${subject.id}`}
                       className="lq-subject-preview"
                     >
-                      <div className="lq-subject-preview-icon">
-                        <BookOpen size={20} />
+                      <div className={`lq-subject-preview-icon subject-visual--${getSubjectIconKey(subject)}`}>
+                        <SubjectIcon subject={subject} size={20} />
                       </div>
 
                       <div>

@@ -2,7 +2,6 @@
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  BookOpen,
   FileText,
   Plus,
   Trash2,
@@ -16,6 +15,8 @@ import {
 import { API_URL } from "../utils/api";
 import { commitStudyDeletion, prepareLessonDeletion } from "../utils/subjectDeletion";
 import ConfirmDeletionDialog from "../components/ConfirmDeletionDialog";
+import SubjectIcon from "../components/SubjectIcon";
+import { getSubjectIconKey } from "../utils/subjectIconConfig";
 
 
 function getUserKey(userId, type) {
@@ -209,8 +210,8 @@ export default function SubjectDetails() {
 
       <header className="subject-details-header">
         <div>
-          <div className="subject-details-icon">
-            <BookOpen size={28} />
+          <div className={`subject-details-icon subject-visual--${getSubjectIconKey(subject)}`}>
+            <SubjectIcon subject={subject} size={28} />
           </div>
 
           <h1>{subject.name}</h1>

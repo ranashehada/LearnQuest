@@ -33,6 +33,16 @@ html[data-lq-theme="dark"] .lesson-content-card {
   color: #eeeafb;
 }
 
+html[data-lq-theme="dark"] .subject-icon-option {
+  border-color: #625777;
+  color: #eeeafb;
+}
+
+html[data-lq-theme="dark"] .subject-icon-option:has(input:checked) {
+  background: #342a52;
+  border-color: #aa97ff;
+}
+
 html[data-lq-theme="dark"] .lq-dashboard-welcome,
 html[data-lq-theme="dark"] .lq-progress-hero,
 html[data-lq-theme="dark"] .lq-profile-heading,

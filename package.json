@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test:planner": "node --test src/utils/studyPlanner.test.mjs",
     "test:deletion": "node --test src/utils/subjectDeletion.test.mjs",
+    "test:subjects": "node --test src/utils/subjectStorage.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
