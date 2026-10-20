@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "test:planner": "node --test src/utils/studyPlanner.test.mjs",
+    "test:deletion": "node --test src/utils/subjectDeletion.test.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

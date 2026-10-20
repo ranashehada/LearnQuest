@@ -10,6 +10,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { API_URL } from "../utils/api";
+import { deleteLessonFiles, setLessonStorageUser } from "../utils/lessonStorage";
+import { commitSubjectDeletion, prepareSubjectDeletion } from "../utils/subjectDeletion";
 
 
 function getSubjectsKey(userId) {
@@ -37,6 +39,8 @@ export default function MySubjects() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [deletionNotice, setDeletionNotice] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -168,16 +172,42 @@ export default function MySubjects() {
     setDescription("");
   }
 
-  function deleteSubject(subject) {
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${subject.name}"?`
-    );
+  async function deleteSubject(subject) {
+    if (!userId || deletingId) return;
+    setError("");
+    setDeletionNotice("");
 
-    if (!confirmed) return;
+    try {
+      const prepared = prepareSubjectDeletion(localStorage, userId, subject.id);
+      const count = prepared.lessonIds.length;
+      const confirmed = window.confirm(
+        `Permanently delete "${subject.name}" and ${count} ${count === 1 ? "lesson" : "lessons"}?\n\n` +
+        "Uploaded files, saved AI explanations, unfinished quizzes, and detailed quiz reviews for this subject will be deleted. " +
+        "Earned XP and scores will stay, and planned study sessions will become general sessions. This cannot be undone."
+      );
+      if (!confirmed) return;
 
-    saveSubjects(
-      subjects.filter((item) => item.id !== subject.id)
-    );
+      setDeletingId(subject.id);
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Please log in again before deleting a subject.");
+      const data = await response.json();
+      if (String(data.user?.id) !== String(userId)) {
+        throw new Error("Your account changed. Refresh before deleting a subject.");
+      }
+
+      setLessonStorageUser(userId);
+      await commitSubjectDeletion(localStorage, prepared, deleteLessonFiles);
+      setSubjects(JSON.parse(prepared.changes.get(getSubjectsKey(userId))));
+      if (editingId === subject.id) setShowForm(false);
+      setDeletionNotice(`"${subject.name}" and its ${count} ${count === 1 ? "lesson" : "lessons"} were deleted. Earned XP was kept.`);
+      window.dispatchEvent(new Event("learnquest:stats-updated"));
+    } catch (err) {
+      setError(err.message || "Could not delete the subject. Please try again.");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   const filteredSubjects = subjects.filter((subject) =>
@@ -236,6 +266,10 @@ export default function MySubjects() {
           }
         />
       </div>
+
+      {deletionNotice && <p role="status">{deletionNotice}</p>}
+      {error && !showForm && <p className="form-error" role="alert">{error}</p>}
+      {deletingId && <p role="status">Deleting subject and uploaded files...</p>}
 
       {showForm && (
         <div className="subject-form-card">
@@ -354,6 +388,7 @@ export default function MySubjects() {
                   <button
                     aria-label={`Delete ${subject.name}`}
                     title="Delete subject"
+                    disabled={deletingId !== null}
                     onClick={() =>
                       deleteSubject(subject)
                     }
