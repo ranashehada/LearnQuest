@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { API_URL } from "../utils/api";
 import { GraduationCap, Eye, EyeOff } from "lucide-react";
 
 export default function SignUp() {
@@ -37,7 +38,7 @@ export default function SignUp() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/signup",
+        `${API_URL}/api/auth/signup`,
         {
           method: "POST",
           credentials: "include",

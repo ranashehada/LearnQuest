@@ -9,6 +9,7 @@ const pdfParse = require("pdf-parse");
 const { GoogleGenAI } = require("@google/genai");
 const session = require("express-session");
 const authRoutes = require("./authRoutes");
+const requireAuth = authRoutes.requireAuth;
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -27,7 +28,7 @@ app.use(
         return callback(null, true);
       }
 
-      return callback(new Error("CORS origin is not allowed."));
+      return callback(null, false);
     },
     credentials: true,
   })
@@ -155,6 +156,7 @@ async function extractPptxText(buffer) {
 
 app.post(
   "/api/extract-text",
+  requireAuth,
   upload.single("file"),
   async (req, res) => {
     try {
@@ -222,7 +224,7 @@ app.post(
 // Explanation / Summary
 // -------------------------------------
 
-app.post("/api/ai/generate", async (req, res) => {
+app.post("/api/ai/generate", requireAuth, async (req, res) => {
   try {
     const { type, lessonText } = req.body || {};
 
@@ -343,7 +345,7 @@ Requirements:
 // AI Chat
 // -------------------------------------
 
-app.post("/api/ai/chat", async (req, res) => {
+app.post("/api/ai/chat", requireAuth, async (req, res) => {
   try {
     const { lessonText, question } = req.body || {};
 
@@ -443,7 +445,7 @@ Rules:
 // Advanced AI Quiz
 // -------------------------------------
 
-app.post("/api/ai/quiz", async (req, res) => {
+app.post("/api/ai/quiz", requireAuth, async (req, res) => {
   try {
     const {
       lessonText,

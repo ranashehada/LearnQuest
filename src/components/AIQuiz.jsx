@@ -10,9 +10,9 @@ import {
   Trophy,
   Zap,
 } from "lucide-react";
+import { API_URL } from "../utils/api";
 import "./AIQuiz.css";
 
-const API_URL = "http://localhost:5000";
 const RESULTS_KEY = "learnquest-quiz-results";
 const SETTINGS_KEY = "learnquest-settings";
 const QUIZ_DRAFT_PREFIX = "learnquest-quiz-draft-";
@@ -275,6 +275,7 @@ export default function AIQuiz({
           `${API_URL}/api/ai/quiz`,
           {
             method: "POST",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
             },
@@ -476,14 +477,19 @@ export default function AIQuiz({
             Learn one question at a time and earn XP!
           </p>
         </div>
-        <Sparkles size={26} />
+        <Sparkles size={26} aria-hidden="true" />
       </div>
+
+      <p className="ai-transparency-notice" role="note">
+        Based on your uploaded lesson. AI responses may contain mistakes, so
+        verify important information with your study material.
+      </p>
 
       {/* QUIZ SETTINGS */}
       {totalQuestions === 0 && !loading && (
         <div className="ai-quiz-start">
           <div className="ai-quiz-start-icon">
-            <Sparkles size={30} />
+            <Sparkles size={30} aria-hidden="true" />
           </div>
 
           <h3>Customize Your Quiz</h3>
@@ -575,7 +581,14 @@ export default function AIQuiz({
               </span>
             </div>
 
-            <div className="ai-quiz-progress-track">
+            <div
+              className="ai-quiz-progress-track"
+              role="progressbar"
+              aria-label="Quiz progress"
+              aria-valuemin={1}
+              aria-valuemax={totalQuestions}
+              aria-valuenow={currentIndex + 1}
+            >
               <div
                 className="ai-quiz-progress-fill"
                 style={{

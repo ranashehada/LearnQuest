@@ -17,8 +17,8 @@ import {
 
 import "./Dashboard.css";
 import FocusTimer from "./FocusTimer";
+import { API_URL } from "../utils/api";
 
-const API_URL = "http://localhost:5000";
 const TASK_XP = 5;
 const RESULTS_KEY = "learnquest-quiz-results";
 const TASKS_KEY = "learnquest-study-tasks";
@@ -93,7 +93,7 @@ function getLastSevenDays(results, tasks) {
 
     days.push({
       key,
-      label: date.toLocaleDateString("en-US", {
+      label: date.toLocaleDateString(undefined, {
         weekday: "short",
       }),
       xp: quizXP + taskXP,
@@ -120,7 +120,7 @@ function formatDate(value) {
     return "Recent activity";
   }
 
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
   });
@@ -137,6 +137,26 @@ export default function Dashboard() {
     results: [],
     tasks: [],
   });
+
+  useEffect(() => {
+    function scrollToFocus() {
+      if (window.location.hash !== "#focus-mode") return;
+
+      window.setTimeout(() => {
+        document.getElementById("focus-mode")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 100);
+    }
+
+    scrollToFocus();
+    window.addEventListener("hashchange", scrollToFocus);
+
+    return () => {
+      window.removeEventListener("hashchange", scrollToFocus);
+    };
+  }, [loading]);
 
   useEffect(() => {
     let active = true;
@@ -540,9 +560,10 @@ export default function Dashboard() {
               <div
                 className="lq-xp-chart-column"
                 key={day.key}
+                aria-label={`${day.label}: ${day.xp} XP`}
               >
                 <span className="lq-xp-chart-value">
-                  {day.xp > 0 ? day.xp : ""}
+                  {day.xp}
                 </span>
 
                 <div className="lq-xp-chart-track">

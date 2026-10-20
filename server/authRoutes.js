@@ -477,3 +477,4 @@ router.post("/change-email", requireAuth, async (req, res) => {
 
 
 module.exports = router;
+module.exports.requireAuth = requireAuth;

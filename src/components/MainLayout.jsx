@@ -7,9 +7,13 @@ import "./MainLayout.css";
 export default function MainLayout() {
   return (
     <div className="dashboard-layout">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <Sidebar />
 
-      <main className="dashboard-main">
+      <main id="main-content" className="dashboard-main" tabIndex={-1}>
         <TopHeader />
 
         <Outlet />

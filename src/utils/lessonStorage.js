@@ -1,10 +1,10 @@
+import { API_URL } from "./api";
 
 const LEGACY_LESSONS_KEY = "learnquest-lessons";
 
 const DB_NAME = "learnquest-files";
 const STORE_NAME = "uploads";
 
-const API_URL = "http://localhost:5000";
 
 // Cache the authenticated user ID in memory only.
 // Never use localStorage as proof of authentication.

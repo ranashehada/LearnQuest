@@ -37,7 +37,7 @@
 
 .lq-dashboard-welcome p {
   margin: 0;
-  color: #8d87a2;
+  color: #5b556f;
   font-size: 14px;
 }
 
@@ -74,7 +74,7 @@
 
 .lq-dashboard-actions-intro p {
   margin: 0;
-  color: #8d87a2;
+  color: #5b556f;
   font-size: 13px;
   line-height: 1.5;
 }
@@ -129,13 +129,13 @@
 }
 
 .lq-dashboard-action small {
-  color: #9189aa;
-  font-size: 11px;
+  color: #5b556f;
+  font-size: 12px;
   line-height: 1.3;
 }
 
 .lq-dashboard-action.primary small {
-  color: #e4ddff;
+  color: #ffffff;
 }
 
 .lq-dashboard-action:focus-visible {
@@ -207,9 +207,9 @@
 }
 
 .lq-dashboard-stat small {
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
-  color: #aaa3bb;
+  color: #5b556f;
 }
 
 /* PANELS */

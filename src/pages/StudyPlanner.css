@@ -83,7 +83,7 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 42px;
+  min-height: 44px;
   border-radius: 9px;
   padding: 9px 13px;
   font: inherit;
@@ -108,7 +108,7 @@
   color: var(--planner-muted);
   border: 1px solid transparent;
   padding: 9px;
-  min-width: 42px;
+  min-width: 44px;
 }
 .planner-text-button {
   background: transparent;

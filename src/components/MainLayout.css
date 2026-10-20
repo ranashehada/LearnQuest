@@ -6,6 +6,25 @@
   This file only adds safe layout adjustments.
 */
 
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: -48px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #2d6cdf;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 12px;
+  outline: 3px solid #1e3a8a;
+  outline-offset: 2px;
+}
+
 .dashboard-main {
   min-width: 0;
 }

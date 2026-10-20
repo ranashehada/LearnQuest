@@ -23,10 +23,10 @@ import MyProgress from "./pages/MyProgress";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import StudyPlanner from "./pages/StudyPlanner";
+import { API_URL } from "./utils/api";
 
 import "./App.css";
 
-const API_URL = "http://localhost:5000";
 
 // Check whether the user has an active session.
 function ProtectedRoutes() {

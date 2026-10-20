@@ -9,8 +9,8 @@ import {
   Trash2,
   ArrowRight,
 } from "lucide-react";
+import { API_URL } from "../utils/api";
 
-const API_URL = "http://localhost:5000";
 
 function getSubjectsKey(userId) {
   return `learnquest-user-${userId}-subjects`;

@@ -12,9 +12,9 @@ import {
   ArrowRight,
   LogOut,
 } from "lucide-react";
+import { API_URL } from "../utils/api";
 import "./TopHeader.css";
 
-const API_URL = "http://localhost:5000";
 
 const RESULTS_KEY = "learnquest-quiz-results";
 const PROFILE_KEY = "learnquest-profile";
@@ -83,18 +83,16 @@ function getLevelName(level) {
 }
 
 function getNextMilestone(xp) {
-  const milestones = [
-    { xp: 250, label: "Achievement badge" },
-    { xp: 500, label: "Advanced progress insights" },
-    { xp: 1000, label: "Collaborative study room" },
-  ];
+  // Honest progress goals only — no unimplemented feature unlocks.
+  const milestones = [250, 500, 1000, 2000];
+  const nextXp =
+    milestones.find((goal) => xp < goal) ||
+    Math.ceil((xp + 100) / 100) * 100;
 
-  return (
-    milestones.find((milestone) => xp < milestone.xp) || {
-      xp: 2000,
-      label: "Study challenge customization",
-    }
-  );
+  return {
+    xp: nextXp,
+    label: `${nextXp.toLocaleString()} XP goal`,
+  };
 }
 
 export default function TopHeader() {
@@ -149,6 +147,32 @@ export default function TopHeader() {
       active = false;
     };
   }, [navigate]);
+
+  // Close the profile menu with Escape or an outside click.
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+
+    function handlePointerDown(event) {
+      const wrapper = event.target.closest(".lq-profile-wrapper");
+      if (!wrapper) {
+        setMenuOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [menuOpen]);
 
   // Keep the existing profile photo and statistics.
   useEffect(() => {
@@ -276,8 +300,12 @@ export default function TopHeader() {
     0
   );
 
-  // Always prioritize the authenticated account's name.
-  const displayName = account?.name || profile.name;
+  // Prefer the Full Name saved on Profile; fall back to the account name.
+  const savedProfileName = profile.name?.trim();
+  const displayName =
+    savedProfileName && savedProfileName !== "Student"
+      ? savedProfileName
+      : account?.name || savedProfileName || "Student";
 
   return (
     <header className="lq-gamified-header">
@@ -285,7 +313,7 @@ export default function TopHeader() {
         {/* WELCOME MESSAGE */}
         <div className="lq-gamified-welcome">
           <div className="lq-welcome-icon">
-            <GraduationCap size={23} />
+            <GraduationCap size={23} aria-hidden="true" />
           </div>
 
           <div>
@@ -299,8 +327,9 @@ export default function TopHeader() {
           <div
             className="lq-game-badge lq-streak-badge"
             title="Consecutive study days"
+            aria-label={`${streak} day study streak`}
           >
-            <Flame size={19} />
+            <Flame size={19} aria-hidden="true" />
             <span>{streak}</span>
             <small>Streak</small>
           </div>
@@ -308,8 +337,9 @@ export default function TopHeader() {
           <div
             className="lq-game-badge lq-xp-badge"
             title="Total XP earned"
+            aria-label={`${totalXp} total experience points`}
           >
-            <Zap size={19} />
+            <Zap size={19} aria-hidden="true" />
             <span>{totalXp}</span>
             <small>XP</small>
           </div>
@@ -323,33 +353,40 @@ export default function TopHeader() {
                 setMenuOpen((previous) => !previous)
               }
               aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              aria-controls="lq-profile-menu"
               aria-label="Open profile menu"
             >
               <div className="lq-game-avatar">
                 {profile.photoURL ? (
                   <img
                     src={profile.photoURL}
-                    alt="Profile"
+                    alt=""
                   />
                 ) : (
-                  <UserRound size={22} />
+                  <UserRound size={22} aria-hidden="true" />
                 )}
               </div>
 
-              <ChevronDown size={15} />
+              <ChevronDown size={15} aria-hidden="true" />
             </button>
 
             {menuOpen && (
-              <div className="lq-profile-dropdown">
+              <div
+                id="lq-profile-menu"
+                className="lq-profile-dropdown"
+                role="menu"
+                aria-label="Profile menu"
+              >
                 <div className="lq-dropdown-user">
                   <div className="lq-game-avatar">
                     {profile.photoURL ? (
                       <img
                         src={profile.photoURL}
-                        alt="Profile"
+                        alt=""
                       />
                     ) : (
-                      <UserRound size={22} />
+                      <UserRound size={22} aria-hidden="true" />
                     )}
                   </div>
 
@@ -370,42 +407,45 @@ export default function TopHeader() {
 
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={() => {
                     setMenuOpen(false);
                     navigate("/profile");
                   }}
                 >
-                  <UserRound size={17} />
+                  <UserRound size={17} aria-hidden="true" />
                   My Profile
-                  <ArrowRight size={15} />
+                  <ArrowRight size={15} aria-hidden="true" />
                 </button>
 
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={() => {
                     setMenuOpen(false);
                     navigate("/my-progress");
                   }}
                 >
-                  <Trophy size={17} />
+                  <Trophy size={17} aria-hidden="true" />
                   My Progress
-                  <ArrowRight size={15} />
+                  <ArrowRight size={15} aria-hidden="true" />
                 </button>
 
                 <div className="lq-dropdown-divider" />
 
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={handleLogout}
                   disabled={loggingOut}
                 >
-                  <LogOut size={17} />
+                  <LogOut size={17} aria-hidden="true" />
 
                   {loggingOut
                     ? "Logging Out..."
                     : "Log Out"}
 
-                  <ArrowRight size={15} />
+                  <ArrowRight size={15} aria-hidden="true" />
                 </button>
 
                 {logoutError && (
@@ -451,7 +491,14 @@ export default function TopHeader() {
             <strong>{levelXp} / 100 XP</strong>
           </div>
 
-          <div className="lq-level-progress-track">
+          <div
+            className="lq-level-progress-track"
+            role="progressbar"
+            aria-label="Level progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+          >
             <div
               className="lq-level-progress-fill"
               style={{ width: `${progress}%` }}
@@ -464,12 +511,12 @@ export default function TopHeader() {
 
           <div className="lq-milestone-progress">
             <span>
-              Next milestone: {nextMilestone.label}
+              Next progress goal: {nextMilestone.label}
             </span>
             <strong>
               {milestoneRemaining > 0
                 ? `${milestoneRemaining} XP remaining`
-                : "Unlocked"}
+                : "Goal reached"}
             </strong>
           </div>
         </div>

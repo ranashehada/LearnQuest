@@ -9,8 +9,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+  setLessonStorageUser,
+  deleteLessonFile,
+} from "../utils/lessonStorage";
+import { API_URL } from "../utils/api";
 
-const API_URL = "http://localhost:5000";
 
 function getUserKey(userId, type) {
   return `learnquest-user-${userId}-${type}`;
@@ -146,13 +150,13 @@ export default function SubjectDetails() {
 
       setLessons(updated);
 
+      // Remove the uploaded file from IndexedDB for this account.
+      setLessonStorageUser(userId);
+      await deleteLessonFile(lesson.id).catch(() => {});
+
       window.dispatchEvent(
         new Event("learnquest:stats-updated")
       );
-
-      // File deletion will be handled when we update
-      // lessonStorage for account-specific file ownership.
-      // Do not delete a shared IndexedDB file here.
     } catch {
       window.alert(
         "Could not delete the lesson. Please try again."

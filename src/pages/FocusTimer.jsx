@@ -95,31 +95,80 @@ export default function FocusTimer() {
   }
 
   return (
-    <section className="lq-focus-card" aria-label="Focus Mode">
+    <section id="focus-mode" className="lq-focus-card" aria-label="Focus Mode">
       <div className="lq-focus-heading">
-        <div className="lq-focus-title"><Timer size={22} /><div><h2>Focus Mode</h2><p>Stay focused. Make every minute count.</p></div></div>
-        <span className="lq-focus-tag">Pomodoro</span>
+        <div className="lq-focus-title">
+          <Timer size={22} aria-hidden="true" />
+          <div>
+            <h2>Focus Mode</h2>
+            <p>Stay focused. Make every minute count.</p>
+          </div>
+        </div>
+        <span className="lq-focus-tag">Timed study session</span>
       </div>
       <div className="lq-focus-options" aria-label="Focus duration">
         {DURATIONS.map((duration) => (
-          <button key={duration} type="button" disabled={timer.status !== "idle"}
+          <button
+            key={duration}
+            type="button"
+            disabled={timer.status !== "idle"}
             className={timer.duration === duration ? "selected" : ""}
-            onClick={() => chooseDuration(duration)}>{duration} min</button>
+            aria-pressed={timer.duration === duration}
+            onClick={() => chooseDuration(duration)}
+          >
+            {duration} min
+          </button>
         ))}
       </div>
-      <div className="lq-focus-clock" role="timer" aria-label="Time remaining">
+      <div
+        className="lq-focus-clock"
+        role="timer"
+        aria-live="polite"
+        aria-label={`Time remaining ${minutes} minutes ${seconds} seconds`}
+      >
         {minutes}:{seconds}
       </div>
-      <div className="lq-focus-track"><div style={{ width: `${progress}%` }} /></div>
-      <p className="lq-focus-status">{timer.status === "running" ? "Focus session in progress" : timer.status === "paused" ? "Session paused" : "Ready for your next study session?"}</p>
+      <div
+        className="lq-focus-track"
+        role="progressbar"
+        aria-label="Focus session progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress)}
+      >
+        <div style={{ width: `${progress}%` }} />
+      </div>
+      <p className="lq-focus-status">
+        {timer.status === "running"
+          ? "Focus session in progress"
+          : timer.status === "paused"
+            ? "Session paused"
+            : "Ready for your next study session?"}
+      </p>
       <div className="lq-focus-actions">
         <button type="button" className="lq-focus-primary" onClick={startPause}>
-          {timer.status === "running" ? <Pause size={18} /> : <Play size={18} />}
-          {timer.status === "running" ? "Pause" : timer.status === "paused" ? "Resume" : "Start Focus"}
+          {timer.status === "running" ? (
+            <Pause size={18} aria-hidden="true" />
+          ) : (
+            <Play size={18} aria-hidden="true" />
+          )}
+          {timer.status === "running"
+            ? "Pause"
+            : timer.status === "paused"
+              ? "Resume"
+              : "Start Focus"}
         </button>
-        <button type="button" className="lq-focus-secondary" onClick={reset}><RotateCcw size={18} />Reset</button>
+        <button type="button" className="lq-focus-secondary" onClick={reset}>
+          <RotateCcw size={18} aria-hidden="true" />
+          Reset
+        </button>
       </div>
-      {notice && <p className="lq-focus-success" role="status"><CheckCircle2 size={17} />{notice}</p>}
+      {notice && (
+        <p className="lq-focus-success" role="status">
+          <CheckCircle2 size={17} aria-hidden="true" />
+          {notice}
+        </p>
+      )}
     </section>
   );
 }

@@ -1,5 +1,5 @@
 
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -7,14 +7,20 @@ import {
   ChartNoAxesColumnIncreasing,
   UserRound,
   Settings,
-  CalendarDays
+  CalendarDays,
+  Timer,
 } from "lucide-react";
 
 export default function Sidebar() {
+  const location = useLocation();
+  const focusActive =
+    location.pathname === "/dashboard" &&
+    location.hash === "#focus-mode";
+
   return (
     <aside className="dashboard-sidebar">
       <Link to="/dashboard" className="dashboard-logo">
-        <GraduationCap size={30} />
+        <GraduationCap size={30} aria-hidden="true" />
         <span>LearnQuest</span>
       </Link>
 
@@ -27,33 +33,42 @@ export default function Sidebar() {
         aria-label="Main navigation"
       >
         <NavLink to="/dashboard" end>
-          <LayoutDashboard size={20} />
+          <LayoutDashboard size={20} aria-hidden="true" />
           Dashboard
         </NavLink>
 
+        <Link
+          to="/dashboard#focus-mode"
+          className={focusActive ? "active" : undefined}
+          aria-current={focusActive ? "page" : undefined}
+        >
+          <Timer size={20} aria-hidden="true" />
+          Focus Mode
+        </Link>
+
         <NavLink to="/study-planner">
-            <CalendarDays size={20} />
-            Study Planner
+          <CalendarDays size={20} aria-hidden="true" />
+          Study Planner
         </NavLink>
 
         <NavLink to="/subjects">
-          <BookOpen size={20} />
+          <BookOpen size={20} aria-hidden="true" />
           My Subjects
         </NavLink>
 
         <NavLink to="/my-progress">
-          <ChartNoAxesColumnIncreasing size={20} />
+          <ChartNoAxesColumnIncreasing size={20} aria-hidden="true" />
           My Progress
         </NavLink>
 
         <NavLink to="/profile">
-            <UserRound size={20} />
-            Profile
+          <UserRound size={20} aria-hidden="true" />
+          Profile
         </NavLink>
 
         <NavLink to="/settings">
-            <Settings size={20} />
-            Settings
+          <Settings size={20} aria-hidden="true" />
+          Settings
         </NavLink>
       </nav>
     </aside>

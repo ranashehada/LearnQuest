@@ -194,7 +194,8 @@ a {
 }
 
 .auth-card input:focus {
-  outline: 2px solid #ede9fe;
+  outline: 3px solid #2d6cdf;
+  outline-offset: 2px;
   border-color: #6558d3;
 }
 
@@ -214,8 +215,10 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   background: transparent;
   border: none;
   color: #64748b;
@@ -620,7 +623,8 @@ a {
 
 .subject-form-card input:focus,
 .subject-form-card textarea:focus {
-  outline: 2px solid #ede9fe;
+  outline: 3px solid #2d6cdf;
+  outline-offset: 2px;
   border-color: #6558d3;
 }
 
@@ -683,6 +687,10 @@ a {
 
 .subject-card-actions button {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   padding: 9px;
   border: none;
   border-radius: 8px;
@@ -1122,6 +1130,11 @@ a {
 }
 
 .subject-lesson-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   border: none;
   background: #fef2f2;
   color: #b91c1c;
@@ -1154,12 +1167,13 @@ a {
 
 .subject-quiz-history-item p {
   margin: 5px 0 0;
-  color: #9e97ae;
-  font-size: 11px;
+  color: #5b556f;
+  font-size: 12px;
 }
 
 .subject-quiz-review-button {
-  padding: 7px 10px;
+  min-height: 44px;
+  padding: 10px 14px;
   border: 1px solid #dcd5fa;
   border-radius: 8px;
   background: #faf9ff;

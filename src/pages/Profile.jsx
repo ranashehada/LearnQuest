@@ -16,9 +16,9 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { API_URL } from "../utils/api";
 import "./Profile.css";
 
-const API_URL = "http://localhost:5000";
 
 const PROFILE_KEY = "learnquest-profile";
 const RESULTS_KEY = "learnquest-quiz-results";

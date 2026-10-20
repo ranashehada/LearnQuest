@@ -322,7 +322,8 @@
 }
 
 .lq-profile-input-wrap:focus-within {
-  border-color: #967de9;
+  border-color: #2d6cdf;
+  box-shadow: 0 0 0 3px rgba(45, 108, 223, 0.35);
 }
 
 .lq-profile-input-wrap input {
@@ -339,13 +340,13 @@
 }
 
 .lq-profile-input-wrap input::placeholder {
-  color: #b4adc1;
+  color: #6b657a;
 }
 
 .lq-profile-note {
   margin: 15px 0;
-  color: #a099af;
-  font-size: 11px;
+  color: #5b556f;
+  font-size: 13px;
   line-height: 1.6;
 }
 

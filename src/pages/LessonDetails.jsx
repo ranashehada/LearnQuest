@@ -22,8 +22,8 @@ import {
   getLessons,
   getLessonFile,
 } from "../utils/lessonStorage";
+import { API_URL } from "../utils/api";
 
-const API_URL = "http://localhost:5000";
 const AI_RESULTS_KEY = "learnquest-ai-results";
 
 function readSavedAIResults(lessonId) {
@@ -96,7 +96,7 @@ function getAIErrorMessage(error, fallback) {
   if (!error) return fallback;
 
   if (error.name === "TypeError") {
-    return "LearnQuest could not reach the AI service. Make sure the backend is running, then try again.";
+    return "LearnQuest could not reach the study assistant right now. Please try again in a moment.";
   }
 
   return error.message || fallback;

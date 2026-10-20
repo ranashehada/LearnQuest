@@ -30,9 +30,9 @@ import {
   validateSession,
   weekStart,
 } from "../utils/studyPlanner";
+import { API_URL } from "../utils/api";
 import "./StudyPlanner.css";
 
-const API_URL = "http://localhost:5000";
 const DAYS = [
   "Sunday",
   "Monday",

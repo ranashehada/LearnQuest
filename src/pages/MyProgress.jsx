@@ -15,6 +15,8 @@ import "./MyProgress.css";
 
 const RESULTS_KEY = "learnquest-quiz-results";
 const ACTIVITY_KEY = "learnquest-study-activity";
+const TASKS_KEY = "learnquest-study-tasks";
+const POINTS_PER_TASK = 5;
 
 function readArray(key) {
   try {
@@ -84,6 +86,7 @@ export default function MyProgress() {
   const [data, setData] = useState({
     results: [],
     activities: [],
+    tasks: [],
   });
 
   useEffect(() => {
@@ -91,6 +94,7 @@ export default function MyProgress() {
       setData({
         results: readArray(RESULTS_KEY),
         activities: readArray(ACTIVITY_KEY),
+        tasks: readArray(TASKS_KEY),
       });
     }
 
@@ -113,12 +117,20 @@ export default function MyProgress() {
     };
   }, []);
 
-  const { results, activities } = data;
+  const { results, activities, tasks } = data;
 
-  const totalXP = useMemo(
-    () => results.reduce((sum, result) => sum + getXP(result), 0),
-    [results]
-  );
+  const totalXP = useMemo(() => {
+    const quizXP = results.reduce(
+      (sum, result) => sum + getXP(result),
+      0
+    );
+
+    const taskXP =
+      tasks.filter((task) => task.xpAwarded === true).length *
+      POINTS_PER_TASK;
+
+    return quizXP + taskXP;
+  }, [results, tasks]);
 
   const averageScore = results.length
     ? Math.round(
@@ -133,6 +145,9 @@ export default function MyProgress() {
   const streak = calculateStreak([
     ...activities,
     ...results.map((result) => result.completedAt),
+    ...tasks
+      .filter((task) => task.completed && task.completedAt)
+      .map((task) => task.completedAt),
   ]);
 
   const level = Math.floor(totalXP / 100) + 1;
@@ -148,21 +163,32 @@ export default function MyProgress() {
 
       const day = localDay(date);
 
+      const quizXP = results.reduce(
+        (sum, result) =>
+          localDay(result.completedAt) === day
+            ? sum + getXP(result)
+            : sum,
+        0
+      );
+
+      const taskXP = tasks.reduce(
+        (sum, task) =>
+          task.xpAwarded === true &&
+          localDay(task.completedAt) === day
+            ? sum + POINTS_PER_TASK
+            : sum,
+        0
+      );
+
       return {
         key: day,
-        label: date.toLocaleDateString("en-US", {
+        label: date.toLocaleDateString(undefined, {
           weekday: "short",
         }),
-        xp: results.reduce(
-          (sum, result) =>
-            localDay(result.completedAt) === day
-              ? sum + getXP(result)
-              : sum,
-          0
-        ),
+        xp: quizXP + taskXP,
       };
     });
-  }, [results]);
+  }, [results, tasks]);
 
   const maxXP = Math.max(10, ...weeklyXP.map((day) => day.xp));
 
