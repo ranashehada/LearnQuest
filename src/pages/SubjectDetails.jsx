@@ -8,13 +8,14 @@ import {
   Trash2,
   ArrowRight,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   setLessonStorageUser,
   deleteLessonFiles,
 } from "../utils/lessonStorage";
 import { API_URL } from "../utils/api";
 import { commitStudyDeletion, prepareLessonDeletion } from "../utils/subjectDeletion";
+import ConfirmDeletionDialog from "../components/ConfirmDeletionDialog";
 
 
 function getUserKey(userId, type) {
@@ -31,50 +32,6 @@ function readArray(key) {
   } catch {
     return [];
   }
-}
-
-function DeleteLessonDialog({ lesson, deleting, error, onClose, onConfirm }) {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    const opener = document.activeElement;
-    dialog.showModal();
-    return () => {
-      dialog.close();
-      if (opener instanceof HTMLElement && opener.isConnected) opener.focus();
-    };
-  }, []);
-
-  return (
-    <dialog
-      ref={dialogRef}
-      className="lesson-delete-dialog"
-      aria-labelledby="lesson-delete-title"
-      aria-describedby="lesson-delete-description"
-      aria-busy={deleting}
-      onCancel={(event) => {
-        event.preventDefault();
-        if (!deleting) onClose();
-      }}
-    >
-      <h2 id="lesson-delete-title">Delete this lesson?</h2>
-      <p id="lesson-delete-description">
-        "{lesson.title}" and its uploaded file, saved AI content, unfinished quiz,
-        and detailed answer reviews will be permanently deleted. Earned XP and
-        scores will stay. This cannot be undone.
-      </p>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="lesson-delete-actions">
-        <button type="button" className="subject-cancel-btn" disabled={deleting} onClick={onClose}>
-          Keep lesson
-        </button>
-        <button type="button" className="btn-primary" disabled={deleting} onClick={onConfirm}>
-          {deleting ? "Deleting..." : "Delete lesson permanently"}
-        </button>
-      </div>
-    </dialog>
-  );
 }
 
 export default function SubjectDetails() {
@@ -276,8 +233,11 @@ export default function SubjectDetails() {
       {deleteNotice && <p role="status">{deleteNotice}</p>}
 
       {pendingLesson && (
-        <DeleteLessonDialog
-          lesson={pendingLesson}
+        <ConfirmDeletionDialog
+          title="Delete this lesson?"
+          description={`"${pendingLesson.title}" and its uploaded file, saved AI content, unfinished quiz, and detailed answer reviews will be permanently deleted. Earned XP and scores will stay. This cannot be undone.`}
+          confirmLabel="Delete lesson permanently"
+          cancelLabel="Keep lesson"
           deleting={deletingId === pendingLesson.id}
           error={deleteError}
           onClose={() => {

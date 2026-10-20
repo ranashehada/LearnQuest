@@ -12,6 +12,7 @@ import {
 import { API_URL } from "../utils/api";
 import { deleteLessonFiles, setLessonStorageUser } from "../utils/lessonStorage";
 import { commitStudyDeletion, prepareSubjectDeletion } from "../utils/subjectDeletion";
+import ConfirmDeletionDialog from "../components/ConfirmDeletionDialog";
 
 
 function getSubjectsKey(userId) {
@@ -40,7 +41,13 @@ export default function MySubjects() {
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [pendingDeletion, setPendingDeletion] = useState(null);
+  const [deletionError, setDeletionError] = useState("");
   const [deletionNotice, setDeletionNotice] = useState("");
+
+  useEffect(() => {
+    if (deletionNotice) document.getElementById("subjects-heading")?.focus();
+  }, [deletionNotice]);
 
   useEffect(() => {
     let active = true;
@@ -172,22 +179,28 @@ export default function MySubjects() {
     setDescription("");
   }
 
-  async function deleteSubject(subject) {
+  function openDeleteSubject(subject) {
     if (!userId || deletingId) return;
     setError("");
+    setDeletionError("");
     setDeletionNotice("");
 
     try {
       const prepared = prepareSubjectDeletion(localStorage, userId, subject.id);
-      const count = prepared.lessonIds.length;
-      const confirmed = window.confirm(
-        `Permanently delete "${subject.name}" and ${count} ${count === 1 ? "lesson" : "lessons"}?\n\n` +
-        "Uploaded files, saved AI explanations, unfinished quizzes, and detailed quiz reviews for this subject will be deleted. " +
-        "Earned XP and scores will stay, and planned study sessions will become general sessions. This cannot be undone."
-      );
-      if (!confirmed) return;
+      setPendingDeletion({ subject, prepared });
+    } catch (err) {
+      setError(err.message || "Could not prepare subject deletion. Nothing was deleted.");
+    }
+  }
 
-      setDeletingId(subject.id);
+  async function confirmDeleteSubject() {
+    if (!pendingDeletion || deletingId) return;
+    const { subject, prepared } = pendingDeletion;
+    const count = prepared.lessonIds.length;
+    setDeletingId(subject.id);
+    setDeletionError("");
+
+    try {
       const response = await fetch(`${API_URL}/api/auth/me`, {
         credentials: "include",
       });
@@ -201,10 +214,11 @@ export default function MySubjects() {
       await commitStudyDeletion(localStorage, prepared, deleteLessonFiles);
       setSubjects(JSON.parse(prepared.changes.get(getSubjectsKey(userId))));
       if (editingId === subject.id) setShowForm(false);
+      setPendingDeletion(null);
       setDeletionNotice(`"${subject.name}" and its ${count} ${count === 1 ? "lesson" : "lessons"} were deleted. Earned XP was kept.`);
       window.dispatchEvent(new Event("learnquest:stats-updated"));
     } catch (err) {
-      setError(err.message || "Could not delete the subject. Please try again.");
+      setDeletionError(err.message || "Could not delete the subject. Your data was left untouched.");
     } finally {
       setDeletingId(null);
     }
@@ -240,7 +254,7 @@ export default function MySubjects() {
     <div className="subjects-page">
       <div className="subjects-heading">
         <div>
-          <h1>My Subjects</h1>
+          <h1 id="subjects-heading" tabIndex={-1}>My Subjects</h1>
           <p>Organize and manage your learning subjects.</p>
         </div>
 
@@ -270,6 +284,22 @@ export default function MySubjects() {
       {deletionNotice && <p role="status">{deletionNotice}</p>}
       {error && !showForm && <p className="form-error" role="alert">{error}</p>}
       {deletingId && <p role="status">Deleting subject and uploaded files...</p>}
+
+      {pendingDeletion && (
+        <ConfirmDeletionDialog
+          title="Delete this subject?"
+          description={`"${pendingDeletion.subject.name}" and ${pendingDeletion.prepared.lessonIds.length} ${pendingDeletion.prepared.lessonIds.length === 1 ? "lesson" : "lessons"} will be permanently deleted, along with uploaded files, saved AI content, unfinished quizzes, and detailed answer reviews. Earned XP and scores will stay, and planned study sessions will become general sessions. This cannot be undone.`}
+          confirmLabel="Delete subject permanently"
+          cancelLabel="Keep subject"
+          deleting={deletingId === pendingDeletion.subject.id}
+          error={deletionError}
+          onClose={() => {
+            setPendingDeletion(null);
+            setDeletionError("");
+          }}
+          onConfirm={confirmDeleteSubject}
+        />
+      )}
 
       {showForm && (
         <div className="subject-form-card">
@@ -390,7 +420,7 @@ export default function MySubjects() {
                     title="Delete subject"
                     disabled={deletingId !== null}
                     onClick={() =>
-                      deleteSubject(subject)
+                      openDeleteSubject(subject)
                     }
                   >
                     <Trash2 size={18} />
